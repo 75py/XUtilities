@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enabled="@bool/is_jb_mr1_or_later"
+    android:title="@string/title_preference_screen_lockscreen_clock" >
+
+    <com.nagopy.android.common.pref.TextPreference text="@string/header_lockscreen_clock" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="master_mod_lockscreen_clock_enable"
+        android:title="@string/title_master_mod_lockscreen_clock_enable" />
+
+    <PreferenceCategory android:title="@string/category_date" >
+        <com.nagopy.android.common.pref.SeekBarPreference
+            defValue="100"
+            max="300"
+            min="1"
+            scale="1"
+            android:dependency="master_mod_lockscreen_clock_enable"
+            android:key="lockscreen_clock_date_text_size"
+            android:title="@string/title_lockscreen_clock_date_text_size" />
+
+        <net.margaritov.preference.colorpicker.ColorPickerPreference
+            alphaSlider="true"
+            enabledByDefault="true"
+            showCheckbox="false"
+            android:defaultValue="@android:color/white"
+            android:dependency="master_mod_lockscreen_clock_enable"
+            android:key="lockscreen_clock_date_text_color"
+            android:title="@string/title_lockscreen_clock_date_text_color" />
+
+        <com.nagopy.android.common.pref.DateFormatEditPreference
+            android:defaultValue="yyyy/MM/dd(E)"
+            android:dependency="master_mod_lockscreen_clock_enable"
+            android:key="lockscreen_clock_date_format"
+            android:title="@string/title_lockscreen_clock_date_format" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:dependency="master_mod_lockscreen_clock_enable"
+            android:key="lockscreen_clock_date_force_english"
+            android:title="@string/title_lockscreen_clock_date_force_english" />
+
+        <com.nagopy.android.common.pref.FontListPreference
+            preview_date_format_key="lockscreen_clock_date_format"
+            preview_force_english_key="lockscreen_clock_date_force_english"
+            android:dependency="master_mod_lockscreen_clock_enable"
+            android:key="lockscreen_clock_date_typeface"
+            android:title="@string/title_lockscreen_clock_date_typeface" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/category_time" >
+        <com.nagopy.android.common.pref.SeekBarPreference
+            defValue="100"
+            max="200"
+            min="1"
+            scale="1"
+            android:dependency="master_mod_lockscreen_clock_enable"
+            android:key="lockscreen_clock_time_text_size"
+            android:title="@string/title_lockscreen_clock_time_text_size" />
+
+        <net.margaritov.preference.colorpicker.ColorPickerPreference
+            alphaSlider="true"
+            enabledByDefault="true"
+            showCheckbox="false"
+            android:defaultValue="@android:color/white"
+            android:dependency="master_mod_lockscreen_clock_enable"
+            android:key="lockscreen_clock_time_text_color"
+            android:title="@string/title_lockscreen_clock_time_text_color" />
+
+        <com.nagopy.android.common.pref.DateFormatEditPreference
+            android:defaultValue="HH:mm:ss"
+            android:dependency="master_mod_lockscreen_clock_enable"
+            android:key="lockscreen_clock_time_format"
+            android:title="@string/title_lockscreen_clock_time_format" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:dependency="master_mod_lockscreen_clock_enable"
+            android:key="lockscreen_clock_time_force_english"
+            android:title="@string/title_lockscreen_clock_time_force_english" />
+
+        <com.nagopy.android.common.pref.FontListPreference
+            preview_date_format_key="lockscreen_clock_time_format"
+            preview_force_english_key="lockscreen_clock_time_force_english"
+            android:dependency="master_mod_lockscreen_clock_enable"
+            android:key="lockscreen_clock_time_typeface"
+            android:title="@string/title_lockscreen_clock_time_typeface" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

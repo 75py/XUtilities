@@ -1,0 +1,10 @@
+<resources>
+
+    <string name="header_notification">通知領域の上部の設定です。\n設定変更は端末の再起動後に反映されます。</string>
+    <string name="title_preference_screen_notification">通知領域</string>
+    <string name="title_master_mod_notification_enable">有効にする</string>
+    <string name="title_hide_notification_header">通知領域のヘッダーを非表示にする</string>
+    <string name="title_hide_notification_icon_packages">通知アイコンだけ隠す</string>
+    <string name="title_hide_all_notification_packages">通知を全て隠す</string>
+
+</resources>

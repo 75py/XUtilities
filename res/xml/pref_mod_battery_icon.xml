@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enabled="@bool/is_jb_mr1_or_later"
+    android:title="@string/title_preference_screen_battery_icon" >
+
+    <com.nagopy.android.common.pref.TextPreference text="@string/header_battery_icon" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="master_mod_battery_icon_enable"
+        android:title="@string/title_master_mod_battery_icon_enable" />
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:dependency="master_mod_battery_icon_enable"
+        android:key="use_circle_battery_icon"
+        android:title="@string/title_use_circle_battery_icon" />
+
+</PreferenceScreen>

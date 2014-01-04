@@ -1,0 +1,155 @@
+/*
+ * Copyright (C) 2013 75py
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.nagopy.android.xposed.utilities;
+
+import java.util.List;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.os.Bundle;
+import android.preference.PreferenceActivity;
+import android.preference.PreferenceFragment;
+import android.preference.PreferenceManager;
+import android.view.MenuItem;
+
+import com.nagopy.android.xposed.ProcessorStringUtil;
+import com.nagopy.android.xposed.util.XLog;
+import com.nagopy.android.xposed.utilities.util.Const;
+
+/**
+ * 設定画面を表示するアクティビティ.
+ */
+public class PrefActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener {
+
+    @Override
+    public void onBuildHeaders(List<Header> target) {
+        super.onBuildHeaders(target);
+        // ヘッダー読み込み
+        loadHeadersFromResource(R.xml.pref_header, target);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+                .registerOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+                .unregisterOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                // Navi up
+                onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected boolean isValidFragment(String fragmentName) {
+        return true;
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        // 変更された値によってブロードキャストを送信するか調べる
+        Object newValue = sharedPreferences.getAll().get(key);
+        XLog.d("changed:" + key + "," + newValue);
+
+        Intent intent = new Intent();
+        intent.putExtra("target", ProcessorStringUtil.snakeToCamel(key));
+        intent.putExtra("value", newValue instanceof String ? (String) newValue
+                : newValue instanceof Integer ? (Integer) newValue
+                        : newValue instanceof Boolean ? (Boolean) newValue : "");
+        // Preferenceのタイトルのリソースは全てR.string.title_キーにしているので、それを使用してタイトルのリソースIDを取得
+        int titleId = getResources().getIdentifier("title_" + key, "string", getPackageName());
+        switch (titleId) {
+            case R.string.title_master_mod_status_bar_enable:
+            case R.string.title_status_bar_clock_text_size:
+            case R.string.title_status_bar_clock_text_color:
+            case R.string.title_status_bar_clock_force_english:
+            case R.string.title_status_bar_clock_format:
+            case R.string.title_status_bar_clock_gravity_bottom:
+            case R.string.title_status_bar_clock_gravity_right:
+                intent.setAction(Const.ACTION_STATUS_BAR_CLOCK_SETTING_CHANGED);
+                break;
+            case R.string.title_master_mod_lockscreen_clock_enable:
+            case R.string.title_lockscreen_clock_date_format:
+            case R.string.title_lockscreen_clock_date_text_color:
+            case R.string.title_lockscreen_clock_date_text_size:
+            case R.string.title_lockscreen_clock_date_force_english:
+            case R.string.title_lockscreen_clock_time_format:
+            case R.string.title_lockscreen_clock_time_text_color:
+            case R.string.title_lockscreen_clock_time_text_size:
+            case R.string.title_lockscreen_clock_time_force_english:
+                intent.setAction(Const.ACTION_LOCKSCREEN_CLOCK_SETTING_CHANGED);
+                break;
+        }
+        // フォント選択で変更があったとき用の処理
+        if (key.startsWith("status_bar_clock_typeface")) {
+            intent.setAction(Const.ACTION_STATUS_BAR_CLOCK_SETTING_CHANGED);
+        }
+        if (key.startsWith("lockscreen_clock_date_typeface")
+                || key.startsWith("lockscreen_clock_time_typeface")) {
+            intent.setAction(Const.ACTION_LOCKSCREEN_CLOCK_SETTING_CHANGED);
+        }
+
+        if (intent.getAction() != null) {
+            // ブロードキャストを送信
+            XLog.d("sendBroadcast:" + key + "," + sharedPreferences.getAll().get(key));
+            sendBroadcast(intent);
+        }
+    }
+
+    /**
+     * 各モジュールの設定画面用フラグメント.<br>
+     * XMLのextraで、name="xml_name"、value="@xml/resource"として使用する。
+     */
+    public static class ModPreferenceFragment extends PreferenceFragment {
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+
+            // XMLのリソースを取得してセット
+            // extraで渡される値は「res/xml/abc.xml」なので、前後を削除
+            // TODO これで良いのか確認？
+            String name = getArguments().getString("xml_name").replace("res/xml/", "")
+                    .replace(".xml", "");
+            int id = getActivity().getResources().getIdentifier(name, "xml",
+                    getActivity().getPackageName());
+            addPreferencesFromResource(id);
+        }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+            // ナビの戻るボタンを表示
+            getActivity().getActionBar().setDisplayShowHomeEnabled(true);
+            getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+
+    }
+}

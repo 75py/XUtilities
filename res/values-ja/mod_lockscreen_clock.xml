@@ -1,0 +1,23 @@
+<resources>
+
+    <!-- header -->
+    <string name="header_lockscreen_clock">ロック画面の時計設定です。\nモジュールが有効になっている間は、設定変更がリアルタイムで反映されます。</string>
+
+    <!-- category -->
+    <string name="category_date">日付表示</string>
+    <string name="category_time">時刻表示</string>
+    <!-- lockscreen clock -->
+    <string name="title_preference_screen_lockscreen_clock">ロック画面時計</string>
+    <string name="title_master_mod_lockscreen_clock_enable">有効にする</string>
+    <string name="title_lockscreen_clock_date_text_size">文字サイズ（％）</string>
+    <string name="title_lockscreen_clock_date_text_color">文字色</string>
+    <string name="title_lockscreen_clock_date_format">フォーマット</string>
+    <string name="title_lockscreen_clock_date_force_english">英語表記</string>
+    <string name="title_lockscreen_clock_time_text_size">文字サイズ（％）</string>
+    <string name="title_lockscreen_clock_time_text_color">文字色</string>
+    <string name="title_lockscreen_clock_time_format">フォーマット</string>
+    <string name="title_lockscreen_clock_time_force_english">英語表記</string>
+    <string name="title_lockscreen_clock_date_typeface">フォント</string>
+    <string name="title_lockscreen_clock_time_typeface">フォント</string>
+
+</resources>

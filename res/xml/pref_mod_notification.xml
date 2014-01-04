@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/title_preference_screen_notification" >
+
+    <com.nagopy.android.common.pref.TextPreference text="@string/header_notification" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="master_mod_notification_enable"
+        android:title="@string/title_master_mod_notification_enable" />
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:dependency="master_mod_notification_enable"
+        android:key="hide_notification_header"
+        android:title="@string/title_hide_notification_header" />
+
+    <com.nagopy.android.common.pref.AppListPreference
+        android:dependency="master_mod_notification_enable"
+        android:key="hide_notification_icon_packages"
+        android:title="@string/title_hide_notification_icon_packages" />
+    <com.nagopy.android.common.pref.AppListPreference
+        android:dependency="master_mod_notification_enable"
+        android:key="hide_all_notification_packages"
+        android:title="@string/title_hide_all_notification_packages" />
+
+</PreferenceScreen>

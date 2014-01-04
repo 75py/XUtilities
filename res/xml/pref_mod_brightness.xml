@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/title_preference_screen_brightness" >
+
+    <com.nagopy.android.common.pref.TextPreference text="@string/header_brightness" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="master_mod_brightness_enable"
+        android:title="@string/title_master_mod_brightness_enable" />
+
+    <com.nagopy.android.common.pref.SeekBarPreference
+        defValue="20"
+        max="255"
+        min="1"
+        scale="1"
+        android:dependency="master_mod_brightness_enable"
+        android:key="min_brightness"
+        android:title="@string/title_min_brightness" />
+
+    <EditTextPreference
+        android:defaultValue="5, 1500, 7500, 30000, 60000, 80000"
+        android:dependency="master_mod_brightness_enable"
+        android:key="config_auto_brightness_levels"
+        android:title="@string/title_config_auto_brightness_levels" />
+    <EditTextPreference
+        android:defaultValue="20, 35, 45, 85, 120, 200, 255"
+        android:dependency="master_mod_brightness_enable"
+        android:key="config_auto_brightness_lcd_backlight_values"
+        android:title="@string/title_config_auto_brightness_lcd_backlight_values" />
+
+    <com.nagopy.android.common.pref.TextPreference text="@string/about_brightness" />
+
+</PreferenceScreen>

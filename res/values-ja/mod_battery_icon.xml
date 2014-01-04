@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="title_preference_screen_battery_icon">バッテリーアイコン</string>
+    <string name="header_battery_icon">ステータスバーのバッテリー表示に関する設定です。\n設定変更は端末の再起動後に反映されます。</string>
+    <string name="title_master_mod_battery_icon_enable">有効にする</string>
+    <string name="title_use_circle_battery_icon">サークルアイコンに置き換える</string>
+
+</resources>

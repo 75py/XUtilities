@@ -1,0 +1,7 @@
+<resources>
+
+    <string name="app_name">XUtilities</string>
+    <string name="app_desription">Utilities for KitKat, vanilla ROM. (Some features also run on JB)</string>
+    <string name="about_brightness"> == Auto brightness levels ==\nArray of light sensor LUX values to define our levels for auto backlight brightness support.\nThe N entries of this array define N + 1 control points as follows: (1-based arrays)\n\nPoint 1: (0, value[1]): lux &lt;= 0\nPoint 2: (level[1], value[2]): 0 &lt; lux &lt;= level[1]\nPoint 3: (level[2], value[3]): level[2] &lt; lux &lt;= level[3]\n...\nPoint N+1: (level[N], value[N+1]): level[N] &lt; lux\n\nThe control points must be strictly increasing.  Each control point corresponds to an entry in the brightness backlight values arrays.\nFor example, if LUX == level[1] (first element of the levels array) then the brightness will be determined by value[2] (second element of the brightness values array).\n\nSpline interpolation is used to determine the auto-brightness backlight values for LUX levels between these control points.\n\n\n == Auto brightness backlight values ==\nArray of output values for LCD backlight corresponding to the LUX values in the config_autoBrightnessLevels array.\nThis array should have size one greater than the size of the config_autoBrightnessLevels array.\nThe brightness values must be between 0 and 255 and be non-decreasing.</string>
+
+</resources>

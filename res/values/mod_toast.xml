@@ -1,0 +1,8 @@
+<resources>
+
+    <string name="title_preference_screen_toast">Toast</string>
+    <string name="title_master_mod_toast_dao_enable">Enable ModToast</string>
+    <string name="title_set_toast_above_lockscreen">Set toast above lockscreen</string>
+    <string name="header_toast">The changes will be applied after reboot.</string>
+
+</resources>

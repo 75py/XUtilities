@@ -1,0 +1,12 @@
+<resources>
+
+    <!-- header -->
+    <string name="header_lockscreen_torch">ロック画面の時計を長押し、ダブルタップすることで、ライトが点灯するようにします。\n設定変更は端末の再起動後に反映されます。</string>
+
+    <!-- lockscreen torch -->
+    <string name="title_preference_screen_lockscreen_torch">ロック画面 ライト</string>
+    <string name="title_master_mod_lockscreen_torch_enable">有効にする</string>
+    <string name="title_lockscreen_clock_double_tap_torch">時計ダブルタップで点灯</string>
+    <string name="title_lockscreen_clock_long_tap_torch_toggle">時計長押しで点灯</string>
+
+</resources>

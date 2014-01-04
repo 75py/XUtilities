@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<preference-headers xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <header
+        android:fragment="com.nagopy.android.xposed.utilities.PrefActivity$ModPreferenceFragment"
+        android:title="@string/title_preference_screen_brightness" >
+        <extra
+            android:name="xml_name"
+            android:value="@xml/pref_mod_brightness" >
+        </extra>
+    </header>
+    <header
+        android:fragment="com.nagopy.android.xposed.utilities.PrefActivity$ModPreferenceFragment"
+        android:title="@string/title_preference_screen_status_bar_clock" >
+        <extra
+            android:name="xml_name"
+            android:value="@xml/pref_mod_status_bar_clock" >
+        </extra>
+    </header>
+    <header
+        android:fragment="com.nagopy.android.xposed.utilities.PrefActivity$ModPreferenceFragment"
+        android:title="@string/title_preference_screen_battery_icon" >
+        <extra
+            android:name="xml_name"
+            android:value="@xml/pref_mod_battery_icon" >
+        </extra>
+    </header>
+    <header
+        android:fragment="com.nagopy.android.xposed.utilities.PrefActivity$ModPreferenceFragment"
+        android:title="@string/title_preference_screen_lockscreen_clock" >
+        <extra
+            android:name="xml_name"
+            android:value="@xml/pref_mod_lockscreen_clock" >
+        </extra>
+    </header>
+    <header
+        android:fragment="com.nagopy.android.xposed.utilities.PrefActivity$ModPreferenceFragment"
+        android:title="@string/title_preference_screen_lockscreen_torch" >
+        <extra
+            android:name="xml_name"
+            android:value="@xml/pref_mod_lockscreen_torch" >
+        </extra>
+    </header>
+    <header
+        android:fragment="com.nagopy.android.xposed.utilities.PrefActivity$ModPreferenceFragment"
+        android:title="@string/title_preference_screen_notification" >
+        <extra
+            android:name="xml_name"
+            android:value="@xml/pref_mod_notification" >
+        </extra>
+    </header>
+    <header
+        android:fragment="com.nagopy.android.xposed.utilities.PrefActivity$ModPreferenceFragment"
+        android:title="@string/title_preference_screen_toast" >
+        <extra
+            android:name="xml_name"
+            android:value="@xml/pref_mod_toast" >
+        </extra>
+    </header>
+    <header
+        android:fragment="com.nagopy.android.xposed.utilities.PrefActivity$ModPreferenceFragment"
+        android:title="@string/title_preference_screen_other_utilities" >
+        <extra
+            android:name="xml_name"
+            android:value="@xml/pref_mod_other_utilities" >
+        </extra>
+    </header>
+
+</preference-headers>

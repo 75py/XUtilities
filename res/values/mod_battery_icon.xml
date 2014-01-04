@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="title_preference_screen_battery_icon">Battery Icon</string>
+    <string name="header_battery_icon">The changes will be applied after reboot.</string>
+    <string name="title_master_mod_battery_icon_enable">Enable ModBatteryIcon</string>
+    <string name="title_use_circle_battery_icon">Use circle battery icon</string>
+
+</resources>

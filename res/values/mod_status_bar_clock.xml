@@ -1,0 +1,17 @@
+<resources>
+
+    <!-- status_bar_clock -->
+    <string name="title_preference_screen_status_bar_clock">Status bar clock</string>
+    <string name="title_master_mod_status_bar_enable">Enable ModStatusBarClock</string>
+    <string name="title_status_bar_clock_text_size">Text size(%)</string>
+    <string name="title_status_bar_clock_text_color">Color</string>
+    <string name="title_status_bar_clock_format">Format</string>
+    <string name="title_status_bar_clock_force_english">Force English</string>
+    <string name="title_status_bar_clock_gravity_bottom">Gravity(vertical)</string>
+    <string name="title_status_bar_clock_gravity_right">Gravity(horizontal)</string>
+    <string name="title_status_bar_clock_typeface">Font</string>
+
+    <!-- header -->
+    <string name="header_status_bar_clock">Statusbar clock settings.\nWhile this module is enabled, the changes will be applied immediately.</string>
+
+</resources>

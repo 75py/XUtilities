@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/title_preference_screen_other_utilities" >
+
+    <com.nagopy.android.common.pref.TextPreference text="@string/header_others" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="master_mod_other_utilities_enable"
+        android:title="@string/title_master_mod_other_utilities_enable" />
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:dependency="master_mod_other_utilities_enable"
+        android:key="show_menu_key"
+        android:title="@string/title_show_menu_key" />
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:dependency="master_mod_other_utilities_enable"
+        android:enabled="@bool/is_jb_mr1_or_later"
+        android:key="volume_rocker_wake"
+        android:title="@string/title_volume_rocker_wake" />
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:dependency="master_mod_other_utilities_enable"
+        android:key="show_ongoing_ime_switcher"
+        android:title="@string/title_show_ongoing_ime_switcher" />
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:dependency="master_mod_other_utilities_enable"
+        android:key="config_allow_action_menu_item_text_with_icon"
+        android:title="@string/title_config_allow_action_menu_item_text_with_icon" />
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:dependency="master_mod_other_utilities_enable"
+        android:enabled="@bool/is_jb_mr1_or_later"
+        android:key="config_camera_sound_forced"
+        android:title="@string/title_config_camera_sound_forced" />
+
+</PreferenceScreen>

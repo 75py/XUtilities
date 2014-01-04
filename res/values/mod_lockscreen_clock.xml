@@ -1,0 +1,23 @@
+<resources>
+
+    <!-- header -->
+    <string name="header_lockscreen_clock">Lockscreen clock settings.\nWhile this module is enabled, the changes will be applied immediately.</string>
+
+    <!-- category -->
+    <string name="category_date">Date</string>
+    <string name="category_time">Time</string>
+
+    <!-- lockscreen clock -->
+    <string name="title_preference_screen_lockscreen_clock">Lockscreen clock</string>
+    <string name="title_master_mod_lockscreen_clock_enable">Enable ModlockscreenClock</string>
+    <string name="title_lockscreen_clock_date_text_size">Text size</string>
+    <string name="title_lockscreen_clock_date_text_color">Text color</string>
+    <string name="title_lockscreen_clock_date_format">Format</string>
+    <string name="title_lockscreen_clock_date_force_english">Force English</string>
+    <string name="title_lockscreen_clock_time_text_size">Text size</string>
+    <string name="title_lockscreen_clock_time_text_color">Text color</string>
+    <string name="title_lockscreen_clock_time_format">Format</string>
+    <string name="title_lockscreen_clock_date_typeface">Font</string>
+    <string name="title_lockscreen_clock_time_typeface">Font</string>
+
+</resources>

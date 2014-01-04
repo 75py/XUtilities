@@ -1,0 +1,13 @@
+<resources>
+
+    <!-- brightness -->
+    <string name="title_preference_screen_brightness">Brightness</string>
+    <string name="title_master_mod_brightness_enable">Enable ModBrightness</string>
+    <string name="title_min_brightness">Min brightness</string>
+    <string name="title_config_auto_brightness_levels">Auto brightness levels</string>
+    <string name="title_config_auto_brightness_lcd_backlight_values">Auto brightness backlight values</string>
+
+    <!-- header -->
+    <string name="header_brightness">Display brightness settings.\nThe changes will be applied after reboot.</string>
+
+</resources>

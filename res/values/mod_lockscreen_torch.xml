@@ -1,0 +1,12 @@
+<resources>
+
+    <!-- header -->
+    <string name="header_lockscreen_torch">Lockscreen torch settings. You can use flashlight by double-tapping or long-tapping the clock.\nThe changes will be applied after reboot.</string>
+
+    <!-- lockscreen torch -->
+    <string name="title_preference_screen_lockscreen_torch">Lockscreen torch</string>
+    <string name="title_master_mod_lockscreen_torch_enable">Enable ModLockscreenTorch</string>
+    <string name="title_lockscreen_clock_double_tap_torch">Clock double tap torch</string>
+    <string name="title_lockscreen_clock_long_tap_torch_toggle">Clock long tap torch</string>
+
+</resources>

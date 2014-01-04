@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="assets_font_name">
+        <item>Alex Toth</item>
+        <item>GL-Nummernschild-Mtl</item>
+        <item>Goudy Bookletter 1911</item>
+        <item>Paper Cuts 2</item>
+        <item>Tuffy</item>
+    </string-array>
+    <string-array name="assets_font_value">
+        <item>alex-toth.ttf</item>
+        <item>GL-Nummernschild-Mtl.ttf</item>
+        <item>GoudyBookletter1911.otf</item>
+        <item>papercuts-2.ttf</item>
+        <item>Tuffy.ttf</item>
+    </string-array>
+
+    <string name="default_assets_font_value">alex-toth.ttf</string>
+
+</resources>

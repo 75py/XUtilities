@@ -1,0 +1,10 @@
+<resources>
+
+    <string name="header_notification">The changes will be applied after reboot.</string>
+    <string name="title_preference_screen_notification">Notification</string>
+    <string name="title_master_mod_notification_enable">Enable ModNotification</string>
+    <string name="title_hide_notification_header">Hide notification header</string>
+    <string name="title_hide_notification_icon_packages">Hide notification icon</string>
+    <string name="title_hide_all_notification_packages">Hide all notification</string>
+
+</resources>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enabled="@bool/is_jb_mr1_or_later"
+    android:title="@string/title_preference_screen_lockscreen_torch" >
+
+    <com.nagopy.android.common.pref.TextPreference text="@string/header_lockscreen_torch" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="master_mod_lockscreen_torch_enable"
+        android:title="@string/title_master_mod_lockscreen_torch_enable" />
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:dependency="master_mod_lockscreen_torch_enable"
+        android:key="lockscreen_clock_double_tap_torch"
+        android:title="@string/title_lockscreen_clock_double_tap_torch" />
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:dependency="master_mod_lockscreen_torch_enable"
+        android:key="lockscreen_clock_long_tap_torch_toggle"
+        android:title="@string/title_lockscreen_clock_long_tap_torch_toggle" />
+
+</PreferenceScreen>

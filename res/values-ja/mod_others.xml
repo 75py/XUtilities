@@ -1,0 +1,15 @@
+<resources>
+
+    <!-- others -->
+    <string name="title_preference_screen_other_utilities">その他</string>
+    <string name="title_show_menu_key">メニューキー表示</string>
+    <string name="title_show_ongoing_ime_switcher">IME切り替えアイコンを表示</string>
+    <string name="title_volume_rocker_wake">音量キーでスリープ復帰</string>
+    <string name="title_config_camera_sound_forced">Camera sound forced</string>
+    <string name="title_config_allow_action_menu_item_text_with_icon">アクションメニュー文字表示</string>
+
+    <!-- header -->
+    <string name="header_others">その他の設定です。\n設定変更は端末の再起動後に反映されます。</string>
+    <string name="title_master_mod_other_utilities_enable">有効にする</string>
+
+</resources>

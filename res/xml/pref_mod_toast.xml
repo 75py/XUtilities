@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/title_preference_screen_toast" >
+
+    <com.nagopy.android.common.pref.TextPreference text="@string/header_toast" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="master_mod_toast_dao_enable"
+        android:title="@string/title_master_mod_toast_dao_enable" />
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:dependency="master_mod_toast_dao_enable"
+        android:key="set_toast_above_lockscreen"
+        android:title="@string/title_set_toast_above_lockscreen" />
+
+</PreferenceScreen>
