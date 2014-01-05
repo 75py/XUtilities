@@ -76,7 +76,9 @@ public class ModBrightness extends AbstractXposedModule implements IXposedHookZy
                         protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                             Object mScreenAutoBrightness = XposedHelpers.getObjectField(
                                     param.thisObject, "mScreenAutoBrightness");
-                            XLog.d("updateAutoBrightness", "mScreenAutoBrightness:"
+                            Object mAmbientLux = XposedHelpers.getObjectField(
+                                    param.thisObject, "mAmbientLux");
+                            XLog.d("updateAutoBrightness", "lux:" + mAmbientLux + " / brightness:"
                                     + mScreenAutoBrightness);
                         }
                     });
