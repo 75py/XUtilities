@@ -26,8 +26,6 @@ import com.nagopy.android.xposed.util.XLog;
 import com.nagopy.android.xposed.utilities.setting.ModBrightnessSettingsGen;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
-import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.XposedHelpers;
 
 public class ModBrightness extends AbstractXposedModule implements IXposedHookZygoteInit {
 
@@ -67,21 +65,6 @@ public class ModBrightness extends AbstractXposedModule implements IXposedHookZy
 
             XResources.setSystemWideReplacement("android", "bool",
                     "config_automatic_brightness_available", true);
-
-            final Class<?> displayPowerContoroll = XposedHelpers.findClass(
-                    "com.android.server.power.DisplayPowerController", null);
-            XposedHelpers.findAndHookMethod(displayPowerContoroll, "updateAutoBrightness",
-                    boolean.class, new XC_MethodHook() {
-                        @Override
-                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                            Object mScreenAutoBrightness = XposedHelpers.getObjectField(
-                                    param.thisObject, "mScreenAutoBrightness");
-                            Object mAmbientLux = XposedHelpers.getObjectField(
-                                    param.thisObject, "mAmbientLux");
-                            XLog.d("updateAutoBrightness", "lux:" + mAmbientLux + " / brightness:"
-                                    + mScreenAutoBrightness);
-                        }
-                    });
         }
 
         XLog.d(getClass().getSimpleName() + " mission complete!");
