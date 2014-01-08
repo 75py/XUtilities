@@ -98,15 +98,6 @@ public class ModLockscreenTorch extends AbstractXposedModule implements IXposedH
         log("handleLoadPackage end");
     }
 
-    /**
-     * デバッグログを出力する.
-     * 
-     * @param msg メッセージ
-     */
-    private static void log(Object msg) {
-        XLog.d(ModLockscreenTorch.class.getSimpleName(), msg);
-    }
-
     private static class ClockTapTorchListener extends SimpleOnGestureListener {
         private final Context mContext;
         /** ダブルタップでライトを点灯するかどうか */
