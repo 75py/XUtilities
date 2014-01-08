@@ -68,6 +68,14 @@
                 <action android:name="com.nagopy.android.xposed.utilities.service.TorchService.ACTION_TORCH_OFF" />
             </intent-filter>
         </receiver>
+        <receiver
+            android:name="com.nagopy.android.xposed.utilities.receiver.BrightnessLogReceiver"
+            android:exported="true"
+            tools:ignore="ExportedReceiver" >
+            <intent-filter>
+                <action android:name="com.nagopy.android.xposed.utilities.ACTION_BRIGHTNESS_LOG" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

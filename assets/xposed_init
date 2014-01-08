@@ -6,3 +6,4 @@ com.nagopy.android.xposed.utilities.ModNotification
 com.nagopy.android.xposed.utilities.ModOtherUtilities
 com.nagopy.android.xposed.utilities.ModToast
 com.nagopy.android.xposed.utilities.ModBatteryIcon
+com.nagopy.android.xposed.utilities.ModAutoBrightnessLogger
