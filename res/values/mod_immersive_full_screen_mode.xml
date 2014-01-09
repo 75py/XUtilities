@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="title_preference_screen_immersive_full_screen_mode">Immersive Full-Screen Mode</string>
+    <string name="header_immersive_full_screen_mode">The changes will be applied after reboot.</string>
+    <string name="title_master_mod_immersive_full_screen_mode_enabled">Enable this module</string>
+    <string name="title_immersive_mode_packages">Immersive mode packages</string>
+
+</resources>
