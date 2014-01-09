@@ -1,8 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.nagopy.android.xposed.utilities"
-    android:versionCode="1"
-    android:versionName="1.0.0" >
+    android:versionCode="2"
+    android:versionName="1.1.0" >
 
     <uses-sdk
         android:minSdkVersion="16"
@@ -66,6 +66,14 @@
                 <action android:name="com.nagopy.android.xposed.utilities.service.TorchService.ACTION_TORCH_TOGGLE" />
                 <action android:name="com.nagopy.android.xposed.utilities.service.TorchService.ACTION_TORCH_ON" />
                 <action android:name="com.nagopy.android.xposed.utilities.service.TorchService.ACTION_TORCH_OFF" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="com.nagopy.android.xposed.utilities.receiver.BrightnessLogReceiver"
+            android:exported="true"
+            tools:ignore="ExportedReceiver" >
+            <intent-filter>
+                <action android:name="com.nagopy.android.xposed.utilities.ACTION_BRIGHTNESS_LOG" />
             </intent-filter>
         </receiver>
     </application>

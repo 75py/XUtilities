@@ -35,7 +35,6 @@ import com.nagopy.android.common.pref.FontListPreference;
 import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.SettingChangedReceiver;
-import com.nagopy.android.xposed.util.XLog;
 import com.nagopy.android.xposed.util.XUtil;
 import com.nagopy.android.xposed.utilities.setting.ModLockscreenClockSettingsGen;
 import com.nagopy.android.xposed.utilities.util.Const;
@@ -197,15 +196,6 @@ public class ModLockscreenClock extends AbstractXposedModule implements
 
                     }
                 });
-    }
-
-    /**
-     * デバッグログを出力する.
-     * 
-     * @param msg メッセージ
-     */
-    private static void log(Object msg) {
-        XLog.d(ModLockscreenClock.class.getSimpleName(), msg);
     }
 
     /**

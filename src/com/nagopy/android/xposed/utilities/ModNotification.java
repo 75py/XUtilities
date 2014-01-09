@@ -78,15 +78,6 @@ public class ModNotification extends AbstractXposedModule implements IXposedHook
         log("handleInitPackageResources end");
     }
 
-    /**
-     * デバッグログを出力する.
-     * 
-     * @param msg メッセージ
-     */
-    private static void log(Object msg) {
-        XLog.d(ModNotification.class.getSimpleName(), msg);
-    }
-
     @Override
     public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
         if (!XUtil.isSystemUi(lpparam)) {

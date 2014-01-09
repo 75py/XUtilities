@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="title_preference_screen_immersive_full_screen_mode">Immersive Full-Screen Mode</string>
+    <string name="header_immersive_full_screen_mode">KitKatから追加された全画面モードを有効にします。アプリによっては正常に動作しないかもしれません。\n設定は再起動後に反映されます。</string>
+    <string name="title_master_mod_immersive_full_screen_mode_enabled">有効にする</string>
+    <string name="title_immersive_mode_packages">対象アプリケーション</string>
+
+</resources>

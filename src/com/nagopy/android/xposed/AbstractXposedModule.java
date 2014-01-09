@@ -66,4 +66,13 @@ public abstract class AbstractXposedModule {
         return id;
     }
 
+    /**
+     * ログ出力を行う.
+     * 
+     * @param obj
+     */
+    protected void log(Object obj) {
+        XLog.d(this.getClass().getSimpleName(), obj);
+    }
+
 }

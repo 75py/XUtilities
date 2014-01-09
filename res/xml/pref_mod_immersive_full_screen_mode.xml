@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enabled="@bool/is_kitkat_or_later"
+    android:title="@string/title_preference_screen_immersive_full_screen_mode" >
+
+    <com.nagopy.android.common.pref.TextPreference text="@string/header_immersive_full_screen_mode" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="master_mod_immersive_full_screen_mode_enabled"
+        android:title="@string/title_master_mod_immersive_full_screen_mode_enabled" />
+
+    <com.nagopy.android.common.pref.AppListPreference
+        android:dependency="master_mod_immersive_full_screen_mode_enabled"
+        android:key="immersive_mode_packages"
+        android:title="@string/title_immersive_mode_packages" />
+
+</PreferenceScreen>
