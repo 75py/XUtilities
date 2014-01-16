@@ -27,6 +27,12 @@ public class ModImmersiveFullScreenModeSettings {
     /** モジュールを有効にするかどうか */
     public Boolean masterModImmersiveFullScreenModeEnabled;
 
+    /** 動作モード */
+    public String immersiveMode;
+
     /** Immersive full screen modeを有効にするパッケージ名のセット */
     public Set<String> immersiveModePackages;
+
+    /** ナビバーだけimmersiveにするパッケージ名 */
+    public Set<String> immersiveNaviBarPackages;
 }

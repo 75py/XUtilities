@@ -10,9 +10,21 @@
         android:key="master_mod_immersive_full_screen_mode_enabled"
         android:title="@string/title_master_mod_immersive_full_screen_mode_enabled" />
 
+    <com.nagopy.android.common.pref.ListPreference
+        android:defaultValue="@string/immersive_mode_disable"
+        android:dependency="master_mod_immersive_full_screen_mode_enabled"
+        android:entries="@array/immersive_mode_name"
+        android:entryValues="@array/immersive_mode_value"
+        android:key="immersive_mode"
+        android:title="@string/title_immersive_mode" />
+
     <com.nagopy.android.common.pref.AppListPreference
         android:dependency="master_mod_immersive_full_screen_mode_enabled"
         android:key="immersive_mode_packages"
         android:title="@string/title_immersive_mode_packages" />
+    <com.nagopy.android.common.pref.AppListPreference
+        android:dependency="master_mod_immersive_full_screen_mode_enabled"
+        android:key="immersive_navi_bar_packages"
+        android:title="@string/title_immersive_navi_bar_packages" />
 
 </PreferenceScreen>

@@ -22,6 +22,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
+import android.preference.Preference;
+import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
@@ -35,7 +37,7 @@ import com.nagopy.android.xposed.utilities.util.Const;
  * 設定画面を表示するアクティビティ.
  */
 public class PrefActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener {
-
+    
     @Override
     public void onBuildHeaders(List<Header> target) {
         super.onBuildHeaders(target);
@@ -150,6 +152,60 @@ public class PrefActivity extends PreferenceActivity implements OnSharedPreferen
             getActivity().getActionBar().setDisplayShowHomeEnabled(true);
             getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
         }
+    }
 
+    public static class ModImmersivePreferenceFragment extends PreferenceFragment {
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_mod_immersive_full_screen_mode);
+
+            Preference masterPreference = findPreference("master_mod_immersive_full_screen_mode_enabled");
+            Preference modePreference = findPreference("immersive_mode");
+            final Preference immersiveModeApps = findPreference("immersive_mode_packages");
+            final Preference hideNaviBarApps = findPreference("immersive_navi_bar_packages");
+            final SharedPreferences sp = PreferenceManager
+                    .getDefaultSharedPreferences(getActivity()
+                            .getApplicationContext());
+            Boolean isCustom = sp
+                    .getBoolean("master_mod_immersive_full_screen_mode_enabled", false)
+                    && sp.getString("immersive_mode",
+                            getString(R.string.immersive_mode_disable)).equals(
+                            getString(R.string.immersive_mode_custom));
+            immersiveModeApps.setEnabled(isCustom);
+            hideNaviBarApps.setEnabled(isCustom);
+
+            OnPreferenceChangeListener onPreferenceChangeListener = new OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object newValue) {
+                    String key = preference.getKey();
+
+                    Boolean isCustom;
+                    if (key.equals("master_mod_immersive_full_screen_mode_enabled")) {
+                        isCustom = (Boolean) newValue
+                                && sp.getString("immersive_mode",
+                                        getString(R.string.immersive_mode_disable)).equals(
+                                        getString(R.string.immersive_mode_custom));
+                    } else {
+                        isCustom = sp
+                                .getBoolean("master_mod_immersive_full_screen_mode_enabled", false)
+                                && newValue.equals(getString(R.string.immersive_mode_custom));
+                    }
+                    immersiveModeApps.setEnabled(isCustom);
+                    hideNaviBarApps.setEnabled(isCustom);
+                    return true;
+                }
+            };
+            masterPreference.setOnPreferenceChangeListener(onPreferenceChangeListener);
+            modePreference.setOnPreferenceChangeListener(onPreferenceChangeListener);
+        }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+            // ナビの戻るボタンを表示
+            getActivity().getActionBar().setDisplayShowHomeEnabled(true);
+            getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
+        }
     }
 }
