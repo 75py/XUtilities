@@ -4,6 +4,26 @@
     <string name="title_preference_screen_immersive_full_screen_mode">Immersive Full-Screen Mode</string>
     <string name="header_immersive_full_screen_mode">The changes will be applied after reboot.</string>
     <string name="title_master_mod_immersive_full_screen_mode_enabled">Enable this module</string>
-    <string name="title_immersive_mode_packages">Immersive mode packages</string>
+    <string name="title_immersive_mode">Mode</string>
+    <string name="title_immersive_mode_packages">Immersive mode apps</string>
+    <string name="title_immersive_navi_bar_packages">Immersive navi bar apps</string>
+
+    <string-array name="immersive_mode_name">
+        <item>Disable</item>
+        <item>Immersive full screen mode</item>
+        <item>Immersive navi bar</item>
+        <item>Custom</item>
+    </string-array>
+    <string-array name="immersive_mode_value">
+        <item>@string/immersive_mode_disable</item>
+        <item>@string/immersive_mode_normal</item>
+        <item>@string/immersive_mode_only_navi_bar</item>
+        <item>@string/immersive_mode_custom</item>
+    </string-array>
+
+    <string name="immersive_mode_disable">0</string>
+    <string name="immersive_mode_normal">1</string>
+    <string name="immersive_mode_only_navi_bar">2</string>
+    <string name="immersive_mode_custom">3</string>
 
 </resources>

@@ -58,12 +58,8 @@
         </extra>
     </header>
     <header
-        android:fragment="com.nagopy.android.xposed.utilities.PrefActivity$ModPreferenceFragment"
+        android:fragment="com.nagopy.android.xposed.utilities.PrefActivity$ModImmersivePreferenceFragment"
         android:title="@string/title_preference_screen_immersive_full_screen_mode" >
-        <extra
-            android:name="xml_name"
-            android:value="@xml/pref_mod_immersive_full_screen_mode" >
-        </extra>
     </header>
     <header
         android:fragment="com.nagopy.android.xposed.utilities.PrefActivity$ModPreferenceFragment"
