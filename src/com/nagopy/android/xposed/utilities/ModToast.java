@@ -71,9 +71,10 @@ public class ModToast extends AbstractXposedModule implements IXposedHookZygoteI
                 Context mContext = (Context) XposedHelpers.getObjectField(param.thisObject,
                         "mContext");
                 String packageName = mContext.getPackageName();
+                Toast toast = (Toast) param.thisObject;
 
                 if (StringUtils.equals(packageName, Const.PACKAGE_NAME)) {
-                    // このモジュールのパッケージ名を一致する場合はオリジナルのメソッドを実行し、トーストを表示
+                    // このモジュールのパッケージ名と一致する場合はオリジナルのメソッドを実行し、トーストを表示
                     log("invokeOriginalMethod, called by " + packageName);
                     ModToast.updateToastType(param.thisObject, true);
                     return XUtil.invokeOriginalMethod(param);
@@ -82,7 +83,6 @@ public class ModToast extends AbstractXposedModule implements IXposedHookZygoteI
                 // パーミッションを持たないアプリの場合があるため、いったんトーストの情報を抜き取り、XUtilitiesの
                 // レシーバーに投げる。こうすることで、パーミッションがないアプリのトーストも
                 // TYPE_SYSTEM_OVERLAYで表示できる
-                Toast toast = (Toast) param.thisObject;
                 Class<?> idCls = XposedHelpers.findClass("com.android.internal.R$id", null);
                 Field messageId = XposedHelpers.findField(idCls, "message");
                 int id = messageId.getInt(null);
@@ -112,6 +112,7 @@ public class ModToast extends AbstractXposedModule implements IXposedHookZygoteI
                 intent.putExtra(Const.EXTRA_TOAST_VERTICAL_MARGIN, toast.getVerticalMargin());
                 intent.putExtra(Const.EXTRA_TOAST_X_OFFSET, toast.getXOffset());
                 intent.putExtra(Const.EXTRA_TOAST_Y_OFFSET, toast.getYOffset());
+                intent.putExtra(Const.EXTRA_TOAST_ORIGINAL_PACKAGE_NAME, packageName);
 
                 // broadcast送信
                 log("sendBroadcast");

@@ -15,4 +15,10 @@
         android:key="set_toast_above_lockscreen"
         android:title="@string/title_set_toast_above_lockscreen" />
 
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:dependency="master_mod_toast_dao_enable"
+        android:key="toast_show_app_icon"
+        android:title="@string/title_toast_show_app_icon" />
+
 </PreferenceScreen>

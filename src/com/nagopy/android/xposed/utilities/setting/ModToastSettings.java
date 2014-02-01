@@ -26,4 +26,7 @@ class ModToastSettings {
 
     public boolean setToastAboveLockscreen;
 
+    /** アプリアイコンを表示するかどうか */
+    public Boolean toastShowAppIcon;
+
 }

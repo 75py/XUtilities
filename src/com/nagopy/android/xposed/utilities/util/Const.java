@@ -52,4 +52,7 @@ public class Const {
     /** {@link Toast#getYOffset()} */
     public static final String EXTRA_TOAST_Y_OFFSET = "com.nagopy.android.xposed.utilities.ModToast.EXTRA_TOAST_Y_OFFSET";
 
+    /** {@link Toast}の呼び出し元パッケージ名 */
+    public static final String EXTRA_TOAST_ORIGINAL_PACKAGE_NAME = "com.nagopy.android.xposed.utilities.ModToast.EXTRA_TOAST_ORIGINAL_PACKAGE_NAME";
+
 }
