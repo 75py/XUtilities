@@ -6,4 +6,6 @@
     <string name="title_toast_show_app_icon">アプリアイコンを表示する</string>
     <string name="header_toast">設定変更は端末の再起動後に反映されます。</string>
 
+    <string name="title_toast_long_delay">表示時間（長め）</string>
+    <string name="title_toast_short_delay">表示時間（短め）</string>
 </resources>

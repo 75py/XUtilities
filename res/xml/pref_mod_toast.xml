@@ -14,11 +14,27 @@
         android:dependency="master_mod_toast_dao_enable"
         android:key="set_toast_above_lockscreen"
         android:title="@string/title_set_toast_above_lockscreen" />
-
     <CheckBoxPreference
         android:defaultValue="false"
         android:dependency="master_mod_toast_dao_enable"
         android:key="toast_show_app_icon"
         android:title="@string/title_toast_show_app_icon" />
+
+    <com.nagopy.android.common.pref.SeekBarPreference
+        defValue="35"
+        max="100"
+        min="1"
+        scale="10"
+        android:dependency="master_mod_toast_dao_enable"
+        android:key="toast_long_delay"
+        android:title="@string/title_toast_long_delay" />
+    <com.nagopy.android.common.pref.SeekBarPreference
+        defValue="20"
+        max="100"
+        min="1"
+        scale="10"
+        android:dependency="master_mod_toast_dao_enable"
+        android:key="toast_short_delay"
+        android:title="@string/title_toast_short_delay" />
 
 </PreferenceScreen>

@@ -5,5 +5,8 @@
     <string name="title_set_toast_above_lockscreen">Set toast above lockscreen</string>
     <string name="title_toast_show_app_icon">Show app icon</string>
     <string name="header_toast">The changes will be applied after reboot.</string>
+    
+    <string name="title_toast_long_delay">Long delay(sec)</string>
+    <string name="title_toast_short_delay">Short delay(sec)</string>
 
 </resources>

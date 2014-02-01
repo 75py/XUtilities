@@ -22,12 +22,15 @@ import org.apache.commons.lang3.StringUtils;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Message;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XLog;
 import com.nagopy.android.xposed.util.XUtil;
@@ -121,6 +124,59 @@ public class ModToast extends AbstractXposedModule implements IXposedHookZygoteI
                 return null;
             }
         });
+
+        // 表示時間調整
+        Class<?> clsNotificationManagerService = XposedHelpers.findClass(
+                "com.android.server.NotificationManagerService",
+                null);
+        final int MESSAGE_TIMEOUT = XposedHelpers.getStaticIntField(clsNotificationManagerService,
+                "MESSAGE_TIMEOUT");
+        Class<?> clsToastRecord = XposedHelpers.findClass(
+                "com.android.server.NotificationManagerService$ToastRecord", null);
+        if (VersionUtil.isKitKatOrLator()) {
+            XposedHelpers
+                    .findAndHookMethod(clsNotificationManagerService,
+                            "scheduleTimeoutLocked", clsToastRecord,
+                            new XC_MethodReplacement() {
+                                @Override
+                                protected Object replaceHookedMethod(MethodHookParam param)
+                                        throws Throwable {
+                                    Object r = param.args[0];
+                                    Handler mHandler = (Handler) XposedHelpers.getObjectField(
+                                            param.thisObject,
+                                            "mHandler");
+                                    Message m = Message.obtain(mHandler, MESSAGE_TIMEOUT, r);
+                                    int duration = XposedHelpers.getIntField(r, "duration");
+                                    long delay = duration == Toast.LENGTH_LONG ? mToastSettings.toastLongDelay * 100
+                                            : mToastSettings.toastShortDelay * 100;
+                                    mHandler.sendMessageDelayed(m, delay);
+                                    return null;
+                                }
+                            });
+        } else {
+            XposedHelpers
+                    .findAndHookMethod(clsNotificationManagerService,
+                            "scheduleTimeoutLocked", clsToastRecord, boolean.class,
+                            new XC_MethodReplacement() {
+                                @Override
+                                protected Object replaceHookedMethod(MethodHookParam param)
+                                        throws Throwable {
+                                    Object r = param.args[0];
+                                    boolean immediate = (Boolean) param.args[1];
+                                    Handler mHandler = (Handler) XposedHelpers.getObjectField(
+                                            param.thisObject,
+                                            "mHandler");
+                                    Message m = Message.obtain(mHandler, MESSAGE_TIMEOUT, r);
+                                    int duration = XposedHelpers.getIntField(r, "duration");
+                                    long delay = immediate ? 0
+                                            : (duration == Toast.LENGTH_LONG ?
+                                                    mToastSettings.toastLongDelay * 100
+                                                    : mToastSettings.toastShortDelay * 100);
+                                    mHandler.sendMessageDelayed(m, delay);
+                                    return null;
+                                }
+                            });
+        }
 
         log(getClass().getSimpleName() + " mission complete!");
     }
