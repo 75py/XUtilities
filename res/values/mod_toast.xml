@@ -9,5 +9,5 @@
     <string name="title_toast_long_delay">Long delay(sec)</string>
     <string name="title_toast_short_delay">Short delay(sec)</string>
 
-    <string name="title_toast_notification">Show notification</string>
+    <string name="title_toast_show_notification">Show notification</string>
 </resources>
