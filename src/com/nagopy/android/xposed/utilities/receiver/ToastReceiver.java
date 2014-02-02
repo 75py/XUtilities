@@ -78,6 +78,8 @@ public class ToastReceiver extends BroadcastReceiver {
                 ViewUtil.setCompoundDrawablesRelative(messageTextView, icon, null, null, null);
                 // 余白設定
                 messageTextView.setCompoundDrawablePadding(DimenUtil.getPixelFromDp(context, 8));
+                // 文字を中央になるよう調整
+                messageTextView.setGravity(Gravity.CENTER_VERTICAL);
             }
         }
 
