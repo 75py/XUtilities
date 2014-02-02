@@ -3,6 +3,11 @@
     <string name="title_preference_screen_toast">トースト</string>
     <string name="title_master_mod_toast_dao_enable">有効にする</string>
     <string name="title_set_toast_above_lockscreen">ロック画面より上位レイヤーへ</string>
+    <string name="title_toast_show_app_icon">アプリアイコンを表示する</string>
     <string name="header_toast">設定変更は端末の再起動後に反映されます。</string>
 
+    <string name="title_toast_long_delay">表示時間（長め）</string>
+    <string name="title_toast_short_delay">表示時間（短め）</string>
+    
+    <string name="title_toast_show_notification">通知領域に表示</string>
 </resources>

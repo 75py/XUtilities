@@ -26,4 +26,20 @@ class ModToastSettings {
 
     public boolean setToastAboveLockscreen;
 
+    /** アプリアイコンを表示するかどうか */
+    public Boolean toastShowAppIcon;
+
+    /**
+     * 表示時間（長め）<br>
+     * <b>この値に100をかけるとミリ秒になります。例えば、1秒に設定した場合は10って値が入る。</b><br>
+     * TODO わかりづらいわｗ
+     */
+    public Integer toastLongDelay;
+
+    /**
+     * 表示時間（短め）<br>
+     * <b>この値に100をかけるとミリ秒になります</b> TODO わかりづらいわｗ
+     */
+    public Integer toastShortDelay;
+
 }

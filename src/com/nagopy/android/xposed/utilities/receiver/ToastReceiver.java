@@ -18,20 +18,37 @@ package com.nagopy.android.xposed.utilities.receiver;
 
 import org.apache.commons.lang3.StringUtils;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.drawable.Drawable;
+import android.preference.PreferenceManager;
+import android.view.Gravity;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.nagopy.android.common.util.DimenUtil;
+import com.nagopy.android.common.util.ImageUtil;
+import com.nagopy.android.common.util.ViewUtil;
 import com.nagopy.android.xposed.util.XLog;
+import com.nagopy.android.xposed.utilities.R;
 import com.nagopy.android.xposed.utilities.util.Const;
 
 /**
  * {@link Toast}の表示をこのアプリに移譲するためのレシーバー.
- *
+ * 
  * @author 75py
  */
 public class ToastReceiver extends BroadcastReceiver {
+
+    public static Drawable smallIcon;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -39,10 +56,10 @@ public class ToastReceiver extends BroadcastReceiver {
             return;
         }
 
-        // intentからトースト情報を取得し、表示する
-        Toast toast = Toast.makeText(context, "sample", Toast.LENGTH_LONG);
-        toast.setText(intent.getStringExtra(Const.EXTRA_TOAST_MESSAGE));
-        toast.setDuration(intent.getIntExtra(Const.EXTRA_TOAST_DURATION, toast.getDuration()));
+        // intentからトースト情報を取得し、セットする
+        String message = intent.getStringExtra(Const.EXTRA_TOAST_MESSAGE);
+        int duration = intent.getIntExtra(Const.EXTRA_TOAST_DURATION, Toast.LENGTH_LONG);
+        Toast toast = Toast.makeText(context, message, duration);
         toast.setGravity(intent.getIntExtra(Const.EXTRA_TOAST_GRAVITY, toast.getGravity()),
                 intent.getIntExtra(Const.EXTRA_TOAST_X_OFFSET, toast.getXOffset()),
                 intent.getIntExtra(Const.EXTRA_TOAST_Y_OFFSET, toast.getYOffset()));
@@ -51,8 +68,75 @@ public class ToastReceiver extends BroadcastReceiver {
                         toast.getHorizontalMargin()),
                 intent.getFloatExtra(Const.EXTRA_TOAST_VERTICAL_MARGIN,
                         toast.getVerticalMargin()));
+
+        // 呼び出し元のパッケージ名を取得
+        String originalPackageName = intent
+                .getStringExtra(Const.EXTRA_TOAST_ORIGINAL_PACKAGE_NAME);
+
+        // アプリアイコン表示
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+        Boolean showAppIcon = sp.getBoolean("toast_show_app_icon", false);
+        if (showAppIcon) {
+            // アイコン取得
+            Drawable icon = ImageUtil.getApplicationIcon(context, originalPackageName);
+            if (icon != null) {
+                // アイコンサイズをセット
+                int iconSize = ImageUtil.getIconSize(context);
+                icon.setBounds(0, 0, iconSize, iconSize);
+                // アイコンをセット
+                TextView messageTextView = (TextView) toast.getView().findViewById(
+                        android.R.id.message);
+                ViewUtil.setCompoundDrawablesRelative(messageTextView, icon, null, null, null);
+                // 余白設定
+                messageTextView.setCompoundDrawablePadding(DimenUtil.getPixelFromDp(context, 8));
+                // 文字を中央になるよう調整
+                messageTextView.setGravity(Gravity.CENTER_VERTICAL);
+            }
+        }
+
+        // 表示
         XLog.d(getClass().getSimpleName(), "show()");
         toast.show();
-    }
 
+        // アプリ情報取得
+        CharSequence appTitle;
+        Drawable appIcon;
+        int uid;
+        int iconSize;
+        try {
+            Context appContext = context.createPackageContext(originalPackageName,
+                    Context.CONTEXT_RESTRICTED);
+            PackageManager packageManager = appContext.getPackageManager();
+            ApplicationInfo applicationInfo = appContext.getApplicationInfo();
+
+            // アプリ名、パッケージ名、UID取得
+            appTitle = applicationInfo.loadLabel(packageManager);
+            appIcon = applicationInfo.loadIcon(packageManager);
+            iconSize = ImageUtil.getIconSize(context);
+            uid = applicationInfo.uid;
+        } catch (NameNotFoundException e) {
+            return;
+        }
+
+        // トースト情報を通知領域に表示
+        boolean showNotification = sp.getBoolean("toast_show_notification", false);
+        if (showNotification) {
+            NotificationManager notificationManager = (NotificationManager) context
+                    .getSystemService(Context.NOTIFICATION_SERVICE);
+
+            Notification.Builder builder = new Notification.Builder(context);
+            builder.setAutoCancel(true);
+            builder.setContentTitle(appTitle);
+            builder.setContentText(message);
+            builder.setWhen(System.currentTimeMillis());
+            builder.setLargeIcon(ImageUtil.reduceByMatrix(ImageUtil.getBitmap(appIcon), iconSize,
+                    iconSize));
+            builder.setSmallIcon(R.drawable.toast_small_icon);
+            builder.setPriority(Notification.PRIORITY_MIN);
+            builder.setContentIntent(PendingIntent.getBroadcast(context, 0, intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT));
+
+            notificationManager.notify(uid, builder.build());
+        }
+    }
 }

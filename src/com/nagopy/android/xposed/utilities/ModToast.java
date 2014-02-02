@@ -22,12 +22,15 @@ import org.apache.commons.lang3.StringUtils;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Message;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XLog;
 import com.nagopy.android.xposed.util.XUtil;
@@ -71,18 +74,21 @@ public class ModToast extends AbstractXposedModule implements IXposedHookZygoteI
                 Context mContext = (Context) XposedHelpers.getObjectField(param.thisObject,
                         "mContext");
                 String packageName = mContext.getPackageName();
+                Toast toast = (Toast) param.thisObject;
 
                 if (StringUtils.equals(packageName, Const.PACKAGE_NAME)) {
-                    // このモジュールのパッケージ名を一致する場合はオリジナルのメソッドを実行し、トーストを表示
+                    // このモジュールのパッケージ名と一致する場合はオリジナルのメソッドを実行
+                    // トーストを表示
                     log("invokeOriginalMethod, called by " + packageName);
                     ModToast.updateToastType(param.thisObject, true);
                     return XUtil.invokeOriginalMethod(param);
                 }
 
+                // パッケージ名がXUtilities以外の場合
+
                 // パーミッションを持たないアプリの場合があるため、いったんトーストの情報を抜き取り、XUtilitiesの
                 // レシーバーに投げる。こうすることで、パーミッションがないアプリのトーストも
                 // TYPE_SYSTEM_OVERLAYで表示できる
-                Toast toast = (Toast) param.thisObject;
                 Class<?> idCls = XposedHelpers.findClass("com.android.internal.R$id", null);
                 Field messageId = XposedHelpers.findField(idCls, "message");
                 int id = messageId.getInt(null);
@@ -93,12 +99,15 @@ public class ModToast extends AbstractXposedModule implements IXposedHookZygoteI
                     // たぶん、カスタムビューを使用している
                     log("not found TextView(Custom Toast?). invokeOriginalMethod, called by "
                             + packageName);
+
                     // レイヤーをTYPE_TOASTに戻してオリジナルのメソッドを実行
                     ModToast.updateToastType(param.thisObject, false);
                     return XUtil.invokeOriginalMethod(param);
                 }
 
-                // トーストのTextViewが取得できた場合は、ブロードキャスト用のIntentを作成
+                // トーストのTextViewが取得できた場合
+
+                // ブロードキャスト用のIntentを作成
                 log("make ACTION_SHOW_TOAST Intent");
                 TextView tv = (TextView) findViewById;
 
@@ -112,6 +121,7 @@ public class ModToast extends AbstractXposedModule implements IXposedHookZygoteI
                 intent.putExtra(Const.EXTRA_TOAST_VERTICAL_MARGIN, toast.getVerticalMargin());
                 intent.putExtra(Const.EXTRA_TOAST_X_OFFSET, toast.getXOffset());
                 intent.putExtra(Const.EXTRA_TOAST_Y_OFFSET, toast.getYOffset());
+                intent.putExtra(Const.EXTRA_TOAST_ORIGINAL_PACKAGE_NAME, packageName);
 
                 // broadcast送信
                 log("sendBroadcast");
@@ -121,11 +131,60 @@ public class ModToast extends AbstractXposedModule implements IXposedHookZygoteI
             }
         });
 
-        log(getClass().getSimpleName() + " mission complete!");
-    }
+        // 表示時間調整
+        Class<?> clsNotificationManagerService = XposedHelpers.findClass(
+                "com.android.server.NotificationManagerService",
+                null);
+        final int MESSAGE_TIMEOUT = XposedHelpers.getStaticIntField(clsNotificationManagerService,
+                "MESSAGE_TIMEOUT");
+        Class<?> clsToastRecord = XposedHelpers.findClass(
+                "com.android.server.NotificationManagerService$ToastRecord", null);
+        if (VersionUtil.isKitKatOrLator()) {
+            XposedHelpers
+                    .findAndHookMethod(clsNotificationManagerService,
+                            "scheduleTimeoutLocked", clsToastRecord,
+                            new XC_MethodReplacement() {
+                                @Override
+                                protected Object replaceHookedMethod(MethodHookParam param)
+                                        throws Throwable {
+                                    Object r = param.args[0];
+                                    Handler mHandler = (Handler) XposedHelpers.getObjectField(
+                                            param.thisObject,
+                                            "mHandler");
+                                    Message m = Message.obtain(mHandler, MESSAGE_TIMEOUT, r);
+                                    int duration = XposedHelpers.getIntField(r, "duration");
+                                    long delay = duration == Toast.LENGTH_LONG ? mToastSettings.toastLongDelay * 100
+                                            : mToastSettings.toastShortDelay * 100;
+                                    mHandler.sendMessageDelayed(m, delay);
+                                    return null;
+                                }
+                            });
+        } else {
+            XposedHelpers
+                    .findAndHookMethod(clsNotificationManagerService,
+                            "scheduleTimeoutLocked", clsToastRecord, boolean.class,
+                            new XC_MethodReplacement() {
+                                @Override
+                                protected Object replaceHookedMethod(MethodHookParam param)
+                                        throws Throwable {
+                                    Object r = param.args[0];
+                                    boolean immediate = (Boolean) param.args[1];
+                                    Handler mHandler = (Handler) XposedHelpers.getObjectField(
+                                            param.thisObject,
+                                            "mHandler");
+                                    Message m = Message.obtain(mHandler, MESSAGE_TIMEOUT, r);
+                                    int duration = XposedHelpers.getIntField(r, "duration");
+                                    long delay = immediate ? 0
+                                            : (duration == Toast.LENGTH_LONG ?
+                                                    mToastSettings.toastLongDelay * 100
+                                                    : mToastSettings.toastShortDelay * 100);
+                                    mHandler.sendMessageDelayed(m, delay);
+                                    return null;
+                                }
+                            });
+        }
 
-    public void log(String msg) {
-        XLog.d("Toast", msg);
+        log(getClass().getSimpleName() + " mission complete!");
     }
 
     /**

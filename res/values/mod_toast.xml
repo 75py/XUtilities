@@ -3,6 +3,11 @@
     <string name="title_preference_screen_toast">Toast</string>
     <string name="title_master_mod_toast_dao_enable">Enable ModToast</string>
     <string name="title_set_toast_above_lockscreen">Set toast above lockscreen</string>
+    <string name="title_toast_show_app_icon">Show app icon</string>
     <string name="header_toast">The changes will be applied after reboot.</string>
+    
+    <string name="title_toast_long_delay">Long delay(sec)</string>
+    <string name="title_toast_short_delay">Short delay(sec)</string>
 
+    <string name="title_toast_notification">Show notification</string>
 </resources>
