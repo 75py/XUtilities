@@ -102,6 +102,7 @@ public class ToastReceiver extends BroadcastReceiver {
         CharSequence appTitle;
         Drawable appIcon;
         int uid;
+        int iconSize;
         try {
             Context appContext = context.createPackageContext(originalPackageName,
                     Context.CONTEXT_RESTRICTED);
@@ -111,11 +112,11 @@ public class ToastReceiver extends BroadcastReceiver {
             // アプリ名、パッケージ名、UID取得
             appTitle = applicationInfo.loadLabel(packageManager);
             appIcon = applicationInfo.loadIcon(packageManager);
+            iconSize = ImageUtil.getIconSize(context);
             uid = applicationInfo.uid;
         } catch (NameNotFoundException e) {
             return;
         }
-
 
         // トースト情報を通知領域に表示
         boolean showNotification = sp.getBoolean("toast_show_notification", false);
@@ -128,7 +129,8 @@ public class ToastReceiver extends BroadcastReceiver {
             builder.setContentTitle(appTitle);
             builder.setContentText(message);
             builder.setWhen(System.currentTimeMillis());
-            builder.setLargeIcon(ImageUtil.getBitmap(appIcon));
+            builder.setLargeIcon(ImageUtil.reduceByMatrix(ImageUtil.getBitmap(appIcon), iconSize,
+                    iconSize));
             builder.setSmallIcon(R.drawable.toast_small_icon);
             builder.setPriority(Notification.PRIORITY_MIN);
             builder.setContentIntent(PendingIntent.getBroadcast(context, 0, intent,
