@@ -17,6 +17,7 @@
     <string name="title_lockscreen_clock_time_text_size">Text size</string>
     <string name="title_lockscreen_clock_time_text_color">Text color</string>
     <string name="title_lockscreen_clock_time_format">Format</string>
+    <string name="title_lockscreen_clock_time_force_english">Force English</string>
     <string name="title_lockscreen_clock_date_typeface">Font</string>
     <string name="title_lockscreen_clock_time_typeface">Font</string>
 
