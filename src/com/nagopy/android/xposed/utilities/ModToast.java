@@ -77,11 +77,14 @@ public class ModToast extends AbstractXposedModule implements IXposedHookZygoteI
                 Toast toast = (Toast) param.thisObject;
 
                 if (StringUtils.equals(packageName, Const.PACKAGE_NAME)) {
-                    // このモジュールのパッケージ名と一致する場合はオリジナルのメソッドを実行し、トーストを表示
+                    // このモジュールのパッケージ名と一致する場合はオリジナルのメソッドを実行
+                    // トーストを表示
                     log("invokeOriginalMethod, called by " + packageName);
                     ModToast.updateToastType(param.thisObject, true);
                     return XUtil.invokeOriginalMethod(param);
                 }
+
+                // パッケージ名がXUtilities以外の場合
 
                 // パーミッションを持たないアプリの場合があるため、いったんトーストの情報を抜き取り、XUtilitiesの
                 // レシーバーに投げる。こうすることで、パーミッションがないアプリのトーストも
@@ -96,12 +99,15 @@ public class ModToast extends AbstractXposedModule implements IXposedHookZygoteI
                     // たぶん、カスタムビューを使用している
                     log("not found TextView(Custom Toast?). invokeOriginalMethod, called by "
                             + packageName);
+
                     // レイヤーをTYPE_TOASTに戻してオリジナルのメソッドを実行
                     ModToast.updateToastType(param.thisObject, false);
                     return XUtil.invokeOriginalMethod(param);
                 }
 
-                // トーストのTextViewが取得できた場合は、ブロードキャスト用のIntentを作成
+                // トーストのTextViewが取得できた場合
+
+                // ブロードキャスト用のIntentを作成
                 log("make ACTION_SHOW_TOAST Intent");
                 TextView tv = (TextView) findViewById;
 
@@ -179,10 +185,6 @@ public class ModToast extends AbstractXposedModule implements IXposedHookZygoteI
         }
 
         log(getClass().getSimpleName() + " mission complete!");
-    }
-
-    public void log(String msg) {
-        XLog.d("Toast", msg);
     }
 
     /**

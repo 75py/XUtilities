@@ -37,4 +37,10 @@
         android:key="toast_short_delay"
         android:title="@string/title_toast_short_delay" />
 
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:dependency="master_mod_toast_dao_enable"
+        android:key="toast_show_notification"
+        android:title="@string/title_toast_show_notification" />
+
 </PreferenceScreen>

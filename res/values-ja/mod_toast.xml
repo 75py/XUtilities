@@ -8,4 +8,6 @@
 
     <string name="title_toast_long_delay">表示時間（長め）</string>
     <string name="title_toast_short_delay">表示時間（短め）</string>
+    
+    <string name="title_toast_show_notification">通知領域に表示</string>
 </resources>
