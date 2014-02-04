@@ -16,7 +16,6 @@
 
 package com.nagopy.android.xposed.utilities.util;
 
-import android.widget.Toast;
 
 /**
  * 定数クラス.
@@ -34,25 +33,4 @@ public class Const {
 
     /** モジュールのパッケージ名 */
     public static final String PACKAGE_NAME = "com.nagopy.android.xposed.utilities";
-
-    /** トースト表示アクション */
-    public static final String ACTION_SHOW_TOAST = "com.nagopy.android.xposed.utilities.ACTION_SHOW_TOAST";
-    /** {@link Toast}のメッセージ本文 */
-    public static final String EXTRA_TOAST_MESSAGE = "com.nagopy.android.xposed.utilities.ModToast.EXTRA_TOAST_MESSAGE";
-    /** {@link Toast#getDuration()} */
-    public static final String EXTRA_TOAST_DURATION = "com.nagopy.android.xposed.utilities.ModToast.EXTRA_TOAST_DURATION";
-    /** {@link Toast#getGravity()} */
-    public static final String EXTRA_TOAST_GRAVITY = "com.nagopy.android.xposed.utilities.ModToast.EXTRA_TOAST_GRAVITY";
-    /** {@link Toast#getGravity()} */
-    public static final String EXTRA_TOAST_HORIZONTAL_MARGIN = "com.nagopy.android.xposed.utilities.ModToast.EXTRA_TOAST_HORIZONTAL_MARGIN";
-    /** {@link Toast#getGravity()} */
-    public static final String EXTRA_TOAST_VERTICAL_MARGIN = "com.nagopy.android.xposed.utilities.ModToast.EXTRA_TOAST_VERTICAL_MARGIN";
-    /** {@link Toast#getXOffset()} */
-    public static final String EXTRA_TOAST_X_OFFSET = "com.nagopy.android.xposed.utilities.ModToast.EXTRA_TOAST_X_OFFSET";
-    /** {@link Toast#getYOffset()} */
-    public static final String EXTRA_TOAST_Y_OFFSET = "com.nagopy.android.xposed.utilities.ModToast.EXTRA_TOAST_Y_OFFSET";
-
-    /** {@link Toast}の呼び出し元パッケージ名 */
-    public static final String EXTRA_TOAST_ORIGINAL_PACKAGE_NAME = "com.nagopy.android.xposed.utilities.ModToast.EXTRA_TOAST_ORIGINAL_PACKAGE_NAME";
-
 }
