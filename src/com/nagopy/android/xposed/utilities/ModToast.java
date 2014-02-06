@@ -20,6 +20,7 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Message;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
@@ -70,10 +71,27 @@ public class ModToast extends AbstractXposedModule implements IXposedHookZygoteI
                     mParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY;
 
                     // タイトルをつける（パーミッションチェック回避用）
+                    XposedHelpers.setAdditionalInstanceField(mParams, "flg", true);
                     mParams.setTitle("Toast");
                 }
             }
         });
+
+        // パーミッションチェック回避用のチェック（気休め程度）
+        XposedHelpers.findAndHookMethod(WindowManager.LayoutParams.class, "setTitle",
+                CharSequence.class, new XC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        Object flg = XposedHelpers.getAdditionalInstanceField(param.thisObject,
+                                "flg");
+                        CharSequence title = (CharSequence) param.args[0];
+                        if (flg == null && TextUtils.equals(title, "Toast")) {
+                            // フラグがついていないけどsetTitle("Toast")ってしてる場合
+                            // 無効化する
+                            param.setResult(null);
+                        }
+                    }
+                });
 
         // Toastのパーミッションチェックをごにょごにょ
         Class<?> clsPhoneWindowManager = XposedHelpers.findClass(
