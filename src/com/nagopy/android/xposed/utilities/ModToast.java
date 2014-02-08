@@ -97,22 +97,28 @@ public class ModToast extends AbstractXposedModule implements IXposedHookZygoteI
         Class<?> clsPhoneWindowManager = XposedHelpers.findClass(
                 "com.android.internal.policy.impl.PhoneWindowManager", null);
         final int OKAY = 0; // TODO WindowManagerGlobal#ADD_OKAY を取得した方が良い
-        XposedHelpers.findAndHookMethod(clsPhoneWindowManager, "checkAddPermission",
-                WindowManager.LayoutParams.class, int[].class, new XC_MethodReplacement() {
-                    @Override
-                    protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
-                        Object originalReturns = XUtil.invokeOriginalMethod(param);
+        XC_MethodReplacement checkAddPermissionReplacement = new XC_MethodReplacement() {
+            @Override
+            protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
+                Object originalReturns = XUtil.invokeOriginalMethod(param);
 
-                        WindowManager.LayoutParams layoutParams = (LayoutParams) param.args[0];
-                        CharSequence title = layoutParams.getTitle();
-                        if (title != null && title.equals("Toast")) {
-                            // トーストの場合、無条件でおっけーにしとく
-                            return OKAY;
-                        } else {
-                            return originalReturns;
-                        }
-                    }
-                });
+                WindowManager.LayoutParams layoutParams = (LayoutParams) param.args[0];
+                CharSequence title = layoutParams.getTitle();
+                if (title != null && title.equals("Toast")) {
+                    // トーストの場合、無条件でおっけーにしとく
+                    return OKAY;
+                } else {
+                    return originalReturns;
+                }
+            }
+        };
+        if (VersionUtil.isJBmr2OrLater()) {
+            XposedHelpers.findAndHookMethod(clsPhoneWindowManager, "checkAddPermission",
+                    WindowManager.LayoutParams.class, int[].class, checkAddPermissionReplacement);
+        } else {
+            XposedHelpers.findAndHookMethod(clsPhoneWindowManager, "checkAddPermission",
+                    WindowManager.LayoutParams.class, checkAddPermissionReplacement);
+        }
 
         // show前にViewをごにょごにょ
         XposedHelpers.findAndHookMethod(Toast.class, "show", new XC_MethodHook() {
@@ -158,7 +164,7 @@ public class ModToast extends AbstractXposedModule implements IXposedHookZygoteI
                                             null, null, null);
                                     // 余白設定
                                     messageTextView.setCompoundDrawablePadding(DimenUtil
-                                            .getPixelFromDp(context, 8));
+                                            .getPixelFromDp(context, 4));
                                     // 文字を中央になるよう調整
                                     messageTextView.setGravity(Gravity.CENTER_VERTICAL);
                                 }
