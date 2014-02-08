@@ -1,0 +1,7 @@
+<resources>
+    <string name="title_preference_screen_action_bar">Action bar</string>
+    <string name="header_action_bar">The changes will be applied after reboot.</string>
+    <string name="title_master_mod_action_bar_enable">Enable ModActionBar</string>
+    <string name="title_action_bar_bottom">Bottom action bar</string>
+
+</resources>
