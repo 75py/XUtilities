@@ -24,4 +24,25 @@
         android:key="hide_all_notification_packages"
         android:title="@string/title_hide_all_notification_packages" />
 
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:dependency="master_mod_notification_enable"
+        android:key="notification_expanded_gravity_bottom"
+        android:title="@string/title_notification_expanded_gravity_bottom" />
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:dependency="master_mod_notification_enable"
+        android:key="reverse_notification_expanded"
+        android:title="@string/title_reverse_notification_expanded" />
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:dependency="master_mod_notification_enable"
+        android:key="hide_notification_expanded_carrier"
+        android:title="@string/title_hide_notification_expanded_carrier" />
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:dependency="master_mod_notification_enable"
+        android:key="notification_header_bottom"
+        android:title="@string/title_notification_header_bottom" />
+
 </PreferenceScreen>

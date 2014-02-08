@@ -6,5 +6,9 @@
     <string name="title_hide_notification_header">通知領域のヘッダーを非表示にする</string>
     <string name="title_hide_notification_icon_packages">通知アイコンだけ隠す</string>
     <string name="title_hide_all_notification_packages">通知を全て隠す</string>
+    <string name="title_reverse_notification_expanded">アイコンを下から埋める</string>
+    <string name="title_notification_expanded_gravity_bottom">通知領域のアイコン下寄せ</string>
+    <string name="title_hide_notification_expanded_carrier">キャリアを非表示にする</string>
+    <string name="title_notification_header_bottom">ヘッダーを下にする</string>
 
 </resources>
