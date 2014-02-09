@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/title_preference_screen_about" >
+
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="KEY_GA_OPTOUT"
+        android:title="@string/ga_dllow_anonymous_usage_reports" />
+
+    <Preference android:title="@string/title_other_apps" >
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="@string/dev_store_url" />
+    </Preference>
+
+</PreferenceScreen>

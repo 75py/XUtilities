@@ -29,15 +29,40 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.view.MenuItem;
 
+import com.google.analytics.tracking.android.EasyTracker;
+import com.google.analytics.tracking.android.GoogleAnalytics;
 import com.nagopy.android.xposed.ProcessorStringUtil;
 import com.nagopy.android.xposed.util.XLog;
+import com.nagopy.android.xposed.utilities.util.AnalyticsUtil;
 import com.nagopy.android.xposed.utilities.util.Const;
 
 /**
  * 設定画面を表示するアクティビティ.
  */
 public class PrefActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener {
-    
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        SharedPreferences sp = PreferenceManager
+                .getDefaultSharedPreferences(getApplicationContext());
+        GoogleAnalytics.getInstance(getApplicationContext()).setAppOptOut(
+                sp.getBoolean(Const.KEY_GA_OPTOUT, false));
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        EasyTracker.getInstance(this).activityStart(this);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        EasyTracker.getInstance(this).activityStop(this);
+    }
+
     @Override
     public void onBuildHeaders(List<Header> target) {
         super.onBuildHeaders(target);
@@ -48,8 +73,18 @@ public class PrefActivity extends PreferenceActivity implements OnSharedPreferen
     @Override
     protected void onResume() {
         super.onResume();
-        PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
-                .registerOnSharedPreferenceChangeListener(this);
+        SharedPreferences defaultSharedPreferences = PreferenceManager
+                .getDefaultSharedPreferences(getApplicationContext());
+        defaultSharedPreferences.registerOnSharedPreferenceChangeListener(this);
+
+        // 初回起動ならダイアログを表示
+        if (defaultSharedPreferences.getBoolean(Const.KEY_FIRST_FLAG, true)) {
+            // フラグを消す
+            defaultSharedPreferences.edit().putBoolean(Const.KEY_FIRST_FLAG, false).apply();
+
+            GASettingDialogFragment dialogFragment = new GASettingDialogFragment();
+            dialogFragment.show(getFragmentManager(), "dialog");
+        }
     }
 
     @Override
@@ -109,6 +144,11 @@ public class PrefActivity extends PreferenceActivity implements OnSharedPreferen
             case R.string.title_lockscreen_clock_time_force_english:
                 intent.setAction(Const.ACTION_LOCKSCREEN_CLOCK_SETTING_CHANGED);
                 break;
+            case R.string.ga_dllow_anonymous_usage_reports:
+                // OptOut
+                GoogleAnalytics.getInstance(getApplicationContext()).setAppOptOut(
+                        sharedPreferences.getBoolean(Const.KEY_GA_OPTOUT, false));
+                return;
         }
         // フォント選択で変更があったとき用の処理
         if (key.startsWith("status_bar_clock_typeface")) {
@@ -124,6 +164,9 @@ public class PrefActivity extends PreferenceActivity implements OnSharedPreferen
             XLog.d("sendBroadcast:" + key + "," + sharedPreferences.getAll().get(key));
             sendBroadcast(intent);
         }
+
+        // 設定変更をGAでトラッキング
+        AnalyticsUtil.pushSettingChengedEvent(getApplicationContext(), key, newValue);
     }
 
     /**
@@ -131,6 +174,7 @@ public class PrefActivity extends PreferenceActivity implements OnSharedPreferen
      * XMLのextraで、name="xml_name"、value="@xml/resource"として使用する。
      */
     public static class ModPreferenceFragment extends PreferenceFragment {
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -151,6 +195,24 @@ public class PrefActivity extends PreferenceActivity implements OnSharedPreferen
             // ナビの戻るボタンを表示
             getActivity().getActionBar().setDisplayShowHomeEnabled(true);
             getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+
+        @Override
+        public void onStart() {
+            super.onStart();
+
+            // 設定画面名をGAでトラッキング
+            AnalyticsUtil.pushOpenScreenEvent(getActivity().getApplicationContext(),
+                    getArguments().getString("xml_name"));
+        }
+
+        @Override
+        public void onStop() {
+            super.onStop();
+
+            // 設定画面名をGAでトラッキング
+            AnalyticsUtil.pushCloseScreenEvent(getActivity().getApplicationContext(),
+                    getArguments().getString("xml_name"));
         }
     }
 

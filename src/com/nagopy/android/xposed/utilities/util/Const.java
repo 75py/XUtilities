@@ -16,7 +16,6 @@
 
 package com.nagopy.android.xposed.utilities.util;
 
-
 /**
  * 定数クラス.
  */
@@ -33,4 +32,9 @@ public class Const {
 
     /** モジュールのパッケージ名 */
     public static final String PACKAGE_NAME = "com.nagopy.android.xposed.utilities";
+
+    /** 初回起動のフラグ用キー */
+    public static final String KEY_FIRST_FLAG = "KEY_FIRST_FLAG";
+
+    public static final String KEY_GA_OPTOUT = "KEY_GA_OPTOUT";
 }
