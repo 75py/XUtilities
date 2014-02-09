@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- 説明 -->
+    <string name="ga_explain">XUtilitiesはGoogle Analyticsにより匿名の情報収集を行います。\n収集した情報は、今後のアプリ開発に使用させていただきます。\nこの設定はいつでも変更できます。</string>
+
+    <!-- 匿名の情報収集を許可しない -->
+    <string name="ga_dllow_anonymous_usage_reports">匿名の情報収集を許可しない</string>
+
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- トラッキングID -->
+    <string name="ga_trackingId">UA-9578951-13</string>
+
+    <!-- Activityの自動トラッキング -->
+    <bool name="ga_autoActivityTracking">true</bool>
+
+    <!-- Exceptionの自動トラッキング -->
+    <bool name="ga_reportUncaughtExceptions">true</bool>
+
+    <!-- 説明 -->
+    <string name="ga_explain">Do you allow XUtilities to send usage reports?\nXUtilities sends your actions reports if you allow. The reports is used for next version up.\nYou can change this settings any time.</string>
+
+    <!-- 匿名の情報収集を許可しない -->
+    <string name="ga_dllow_anonymous_usage_reports">Disallow anonymous usage reports</string>
+
+</resources>

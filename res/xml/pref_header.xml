@@ -77,5 +77,13 @@
             android:value="@xml/pref_mod_other_utilities" >
         </extra>
     </header>
+    <header
+        android:fragment="com.nagopy.android.xposed.utilities.PrefActivity$ModPreferenceFragment"
+        android:title="@string/title_preference_screen_about" >
+        <extra
+            android:name="xml_name"
+            android:value="@xml/pref_about" >
+        </extra>
+    </header>
 
 </preference-headers>
