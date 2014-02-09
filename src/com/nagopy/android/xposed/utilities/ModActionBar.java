@@ -49,7 +49,7 @@ public class ModActionBar extends AbstractXposedModule implements IXposedHookZyg
             log("do nothing(version)");
         }
 
-        if (mSettings.actionBarBottom) {
+        if (mSettings.actionBarBottomEnable) {
             // for KitKat
             // アクションバーを下に表示
             Class<?> clsActionBarOverlayLayout = XposedHelpers.findClass(
@@ -61,6 +61,12 @@ public class ModActionBar extends AbstractXposedModule implements IXposedHookZyg
                         protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                             Context context = (Context) XposedHelpers.callMethod(param.thisObject,
                                     "getContext");
+                            String packageName = context.getPackageName();
+
+                            if (!mSettings.actionBarBottomPackages.contains(packageName)) {
+                                // 対象に含まれない場合、何もしない
+                                return;
+                            }
 
                             // ActionBarのViewを取得
                             int action_bar_container = context.getResources().getIdentifier(

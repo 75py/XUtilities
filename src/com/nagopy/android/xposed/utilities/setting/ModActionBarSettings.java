@@ -16,6 +16,8 @@
 
 package com.nagopy.android.xposed.utilities.setting;
 
+import java.util.Set;
+
 import com.nagopy.android.xposed.annotation.XSettings;
 import com.nagopy.android.xposed.utilities.util.Const;
 
@@ -25,6 +27,9 @@ class ModActionBarSettings {
     public Boolean masterModActionBarEnable;
 
     /** アクションバーを下に移動する */
-    public Boolean actionBarBottom;
+    public Boolean actionBarBottomEnable;
+
+    /** 下に移動するパッケージ名 */
+    public Set<String> actionBarBottomPackages;
 
 }

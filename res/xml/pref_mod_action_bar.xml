@@ -13,7 +13,11 @@
     <CheckBoxPreference
         android:defaultValue="false"
         android:dependency="master_mod_action_bar_enable"
-        android:key="action_bar_bottom"
-        android:title="@string/title_action_bar_bottom" />
+        android:key="action_bar_bottom_enable"
+        android:title="@string/title_action_bar_bottom_enable" />
+    <com.nagopy.android.common.pref.AppListPreference
+        android:dependency="master_mod_action_bar_enable"
+        android:key="action_bar_bottom_packages"
+        android:title="@string/title_action_bar_bottom_packages" />
 
 </PreferenceScreen>
