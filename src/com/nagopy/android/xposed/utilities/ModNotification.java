@@ -20,8 +20,13 @@ import android.annotation.TargetApi;
 import android.os.Build;
 import android.os.IBinder;
 import android.service.notification.StatusBarNotification;
+import android.view.Gravity;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
+import android.widget.ScrollView;
+import android.widget.TextView;
 
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XConst;
@@ -60,20 +65,73 @@ public class ModNotification extends AbstractXposedModule implements IXposedHook
 
         log("handleInitPackageResources start");
 
-        if (mNotificationSettings.hideNotificationHeader) {
-            // 通知領域のヘッダーを非表示にする
-            resparam.res.hookLayout(XConst.PKG_SYSTEM_UI, "layout", "super_status_bar",
-                    new XC_LayoutInflated() {
-                        @Override
-                        public void handleLayoutInflated(LayoutInflatedParam liparam)
-                                throws Throwable {
+        resparam.res.hookLayout(XConst.PKG_SYSTEM_UI, "layout", "super_status_bar",
+                new XC_LayoutInflated() {
+                    @Override
+                    public void handleLayoutInflated(LayoutInflatedParam liparam)
+                            throws Throwable {
+                        // ヘッダー
+                        LinearLayout header = (LinearLayout) liparam.view.findViewById(
+                                liparam.res.getIdentifier("header", "id", XConst.PKG_SYSTEM_UI));
+                        // キャリア表示
+                        TextView carrierLabel = (TextView) liparam.view.findViewById(
+                                liparam.res.getIdentifier("carrier_label", "id",
+                                        XConst.PKG_SYSTEM_UI));
+
+                        if (mNotificationSettings.hideNotificationHeader) {
                             // ヘッダーを非表示にする
-                            LinearLayout header = (LinearLayout) liparam.view.findViewById(
-                                    liparam.res.getIdentifier("header", "id", XConst.PKG_SYSTEM_UI));
                             header.setVisibility(View.GONE);
                         }
-                    });
-        }
+
+                        if (mNotificationSettings.hideNotificationExpandedCarrier) {
+                            // キャリアを非表示にする
+                            carrierLabel.setVisibility(View.GONE);
+                            carrierLabel.setPadding(0, 0, 0, 1000);
+                        }
+
+                        if (mNotificationSettings.notificationExpandedGravityBottom) {
+                            // 下寄せ
+
+                            // キャリア表示部分にヘッダー分のマージンをセット
+                            FrameLayout.LayoutParams carrierLabelParams = (FrameLayout.LayoutParams) carrierLabel
+                                    .getLayoutParams();
+                            carrierLabelParams.gravity = Gravity.TOP;
+                            carrierLabelParams.topMargin = carrierLabel
+                                    .getContext().getResources()
+                                    .getDimensionPixelSize(
+                                            liparam.res.getIdentifier(
+                                                    "notification_panel_header_height",
+                                                    "dimen",
+                                                    XConst.PKG_SYSTEM_UI));
+
+                            // うまいことやる
+                            LinearLayout parentLayout = (LinearLayout) header.getParent();
+                            FrameLayout.LayoutParams parentLayoutParams = (FrameLayout.LayoutParams) parentLayout
+                                    .getLayoutParams();
+                            parentLayoutParams.height = FrameLayout.LayoutParams.MATCH_PARENT;
+
+                            ScrollView scrollView = (ScrollView) liparam.view.findViewById(
+                                    liparam.res.getIdentifier("scroll", "id", XConst.PKG_SYSTEM_UI));
+                            FrameLayout.LayoutParams svParams = (FrameLayout.LayoutParams) scrollView
+                                    .getLayoutParams();
+                            svParams.gravity = Gravity.BOTTOM;
+
+                            FrameLayout svParent = (FrameLayout) scrollView.getParent();
+                            LinearLayout.LayoutParams svParentParams = (LinearLayout.LayoutParams) svParent
+                                    .getLayoutParams();
+                            svParentParams.height = 0;
+                            svParentParams.weight = 1;
+
+                            if (mNotificationSettings.notificationHeaderBottom) {
+                                // ヘッダーをフッターにする
+                                LinearLayout.LayoutParams p = (LayoutParams) header
+                                        .getLayoutParams();
+                                parentLayout.removeView(header);
+                                parentLayout.addView(header, p);
+                            }
+                        }
+                    }
+                });
 
         log("handleInitPackageResources end");
     }
@@ -123,6 +181,28 @@ public class ModNotification extends AbstractXposedModule implements IXposedHook
                         }
                     }
                 });
+
+        // 順番を逆にしてみる
+        if (mNotificationSettings.reverseNotificationExpanded) {
+            Class<?> clsNotificationData = XposedHelpers.findClass(
+                    "com.android.systemui.statusbar.NotificationData",
+                    lpparam.classLoader);
+            XposedHelpers.findAndHookMethod(clsNotificationData, "get", int.class,
+                    new XC_MethodReplacement() {
+                        @Override
+                        protected Object replaceHookedMethod(MethodHookParam param)
+                                throws Throwable {
+                            int i = (Integer) param.args[0];
+                            int size = (Integer) XposedHelpers.callMethod(param.thisObject, "size");
+                            return XposedBridge.invokeOriginalMethod(param.method,
+                                    param.thisObject,
+                                    new Object[] {
+                                        size - i - 1
+                                    });
+                        }
+                    });
+        }
+
         log("handleLoadPackage end");
     }
 }

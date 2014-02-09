@@ -35,4 +35,16 @@ class ModNotificationSettings {
     /** 通知アイコンだけを消すパッケージ名のセット */
     public Set<String> hideNotificationIconPackages;
 
+    /** 通知領域のアイコン部分を下寄せにする */
+    public Boolean notificationExpandedGravityBottom;
+
+    /** 通知領域の表示順を逆にする */
+    public Boolean reverseNotificationExpanded;
+
+    /** キャリア表示を非表示にする */
+    public Boolean hideNotificationExpandedCarrier;
+
+    /** ヘッダーの時計とかを下にする */
+    public Boolean notificationHeaderBottom;
+
 }

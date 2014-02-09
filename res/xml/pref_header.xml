@@ -11,6 +11,14 @@
     </header>
     <header
         android:fragment="com.nagopy.android.xposed.utilities.PrefActivity$ModPreferenceFragment"
+        android:title="@string/title_preference_screen_action_bar" >
+        <extra
+            android:name="xml_name"
+            android:value="@xml/pref_mod_action_bar" >
+        </extra>
+    </header>
+    <header
+        android:fragment="com.nagopy.android.xposed.utilities.PrefActivity$ModPreferenceFragment"
         android:title="@string/title_preference_screen_status_bar_clock" >
         <extra
             android:name="xml_name"

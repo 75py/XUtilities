@@ -6,5 +6,9 @@
     <string name="title_hide_notification_header">Hide notification header</string>
     <string name="title_hide_notification_icon_packages">Hide notification icon</string>
     <string name="title_hide_all_notification_packages">Hide all notification</string>
+    <string name="title_reverse_notification_expanded">Reverse notification expanded order</string>
+    <string name="title_notification_expanded_gravity_bottom">Gravity bottom</string>
+    <string name="title_hide_notification_expanded_carrier">Hide carrier label</string>
+    <string name="title_notification_header_bottom">Bottom header</string>
 
 </resources>

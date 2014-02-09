@@ -16,26 +16,27 @@
 
 package com.nagopy.android.xposed.utilities;
 
-import java.lang.reflect.Field;
-
-import org.apache.commons.lang3.StringUtils;
-
 import android.content.Context;
-import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Message;
+import android.text.TextUtils;
+import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.nagopy.android.common.util.DimenUtil;
+import com.nagopy.android.common.util.ImageUtil;
 import com.nagopy.android.common.util.VersionUtil;
+import com.nagopy.android.common.util.ViewUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XLog;
 import com.nagopy.android.xposed.util.XUtil;
 import com.nagopy.android.xposed.utilities.setting.ModToastSettingsGen;
-import com.nagopy.android.xposed.utilities.util.Const;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodHook;
@@ -58,76 +59,131 @@ public class ModToast extends AbstractXposedModule implements IXposedHookZygoteI
             return;
         }
 
-        // Toast優先度アップ
-        XposedBridge.hookAllConstructors(Toast.class, new XC_MethodHook() {
+        // レイヤーとかをごにょごびょ
+        Class<?> clsTN = XposedHelpers.findClass("android.widget.Toast$TN", null);
+        XposedBridge.hookAllConstructors(clsTN, new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                // トーストの表示レイヤーを変更
-                ModToast.updateToastType(param.thisObject, mToastSettings.setToastAboveLockscreen);
+                if (mToastSettings.setToastAboveLockscreen) {
+                    // トーストのレイヤーを変更
+                    WindowManager.LayoutParams mParams = (LayoutParams) XposedHelpers
+                            .getObjectField(param.thisObject, "mParams");
+                    mParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY;
+
+                    // タイトルをつける（パーミッションチェック回避用）
+                    XposedHelpers.setAdditionalInstanceField(mParams, "flg", true);
+                    mParams.setTitle("Toast");
+                }
             }
         });
 
-        // showメソッドを書き換え
-        XposedHelpers.findAndHookMethod(Toast.class, "show", new XC_MethodReplacement() {
+        // パーミッションチェック回避用のチェック（気休め程度）
+        XposedHelpers.findAndHookMethod(WindowManager.LayoutParams.class, "setTitle",
+                CharSequence.class, new XC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        Object flg = XposedHelpers.getAdditionalInstanceField(param.thisObject,
+                                "flg");
+                        CharSequence title = (CharSequence) param.args[0];
+                        if (flg == null && TextUtils.equals(title, "Toast")) {
+                            // フラグがついていないけどsetTitle("Toast")ってしてる場合
+                            // 無効化する
+                            param.setResult(null);
+                        }
+                    }
+                });
+
+        // Toastのパーミッションチェックをごにょごにょ
+        Class<?> clsPhoneWindowManager = XposedHelpers.findClass(
+                "com.android.internal.policy.impl.PhoneWindowManager", null);
+        final int OKAY = 0; // TODO WindowManagerGlobal#ADD_OKAY を取得した方が良い
+        XC_MethodReplacement checkAddPermissionReplacement = new XC_MethodReplacement() {
             @Override
             protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
-                Context mContext = (Context) XposedHelpers.getObjectField(param.thisObject,
-                        "mContext");
-                String packageName = mContext.getPackageName();
-                Toast toast = (Toast) param.thisObject;
+                Object originalReturns = XUtil.invokeOriginalMethod(param);
 
-                if (StringUtils.equals(packageName, Const.PACKAGE_NAME)) {
-                    // このモジュールのパッケージ名と一致する場合はオリジナルのメソッドを実行
-                    // トーストを表示
-                    log("invokeOriginalMethod, called by " + packageName);
-                    ModToast.updateToastType(param.thisObject, true);
-                    return XUtil.invokeOriginalMethod(param);
+                WindowManager.LayoutParams layoutParams = (LayoutParams) param.args[0];
+                CharSequence title = layoutParams.getTitle();
+                if (title != null && title.equals("Toast")) {
+                    // トーストの場合、無条件でおっけーにしとく
+                    return OKAY;
+                } else {
+                    return originalReturns;
                 }
+            }
+        };
+        if (VersionUtil.isJBmr2OrLater()) {
+            XposedHelpers.findAndHookMethod(clsPhoneWindowManager, "checkAddPermission",
+                    WindowManager.LayoutParams.class, int[].class, checkAddPermissionReplacement);
+        } else {
+            XposedHelpers.findAndHookMethod(clsPhoneWindowManager, "checkAddPermission",
+                    WindowManager.LayoutParams.class, checkAddPermissionReplacement);
+        }
 
-                // パッケージ名がXUtilities以外の場合
+        // show前にViewをごにょごにょ
+        XposedHelpers.findAndHookMethod(Toast.class, "show", new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                log("show start");
+                View mNextView = (View) XposedHelpers.getObjectField(param.thisObject, "mNextView");
+                Context context = mNextView.getContext();
 
-                // パーミッションを持たないアプリの場合があるため、いったんトーストの情報を抜き取り、XUtilitiesの
-                // レシーバーに投げる。こうすることで、パーミッションがないアプリのトーストも
-                // TYPE_SYSTEM_OVERLAYで表示できる
-                Class<?> idCls = XposedHelpers.findClass("com.android.internal.R$id", null);
-                Field messageId = XposedHelpers.findField(idCls, "message");
-                int id = messageId.getInt(null);
-                View findViewById = toast.getView().findViewById(id);
+                // LinearLayoutの場合
+                if (mNextView instanceof LinearLayout) {
+                    LinearLayout originalLL = (LinearLayout) mNextView;
 
-                if (findViewById == null) {
-                    // ビューが見つからない場合
-                    // たぶん、カスタムビューを使用している
-                    log("not found TextView(Custom Toast?). invokeOriginalMethod, called by "
-                            + packageName);
+                    if (originalLL.getOrientation() == LinearLayout.HORIZONTAL) {
+                        log("is HORIZONTAL!");
+                        // LinearLayout横配置の場合
+                        // たぶん、カスタムレイアウト
 
-                    // レイヤーをTYPE_TOASTに戻してオリジナルのメソッドを実行
-                    ModToast.updateToastType(param.thisObject, false);
-                    return XUtil.invokeOriginalMethod(param);
+                        // TODO どーする？何もしないでおｋ？
+                    } else {
+                        log("is not HORIZONTAL!");
+                        // LinearLayout縦配置の場合
+                        // たぶん、デフォルトのレイアウト
+                        // ほんとにデフォルトか確認
+                        if (originalLL.getChildCount() == 1) {
+                            // 子View一個かを確認
+                            View childAt = originalLL.getChildAt(0);
+                            if (childAt.getId() == android.R.id.message
+                                    && childAt instanceof TextView) {
+                                // 子View一個、idがmessage、TextView
+                                // ここまで厳密にやつ必要あるか疑問だが……
+
+                                // アイコン取得
+                                Drawable icon = ImageUtil.getApplicationIcon(context,
+                                        context.getPackageName());
+                                if (icon != null) {
+                                    // アイコンサイズをセット
+                                    int iconSize = ImageUtil.getIconSize(context);
+                                    icon.setBounds(0, 0, iconSize, iconSize);
+                                    // アイコンをセット
+                                    TextView messageTextView = (TextView) childAt;
+                                    ViewUtil.setCompoundDrawablesRelative(messageTextView, icon,
+                                            null, null, null);
+                                    // 余白設定
+                                    messageTextView.setCompoundDrawablePadding(DimenUtil
+                                            .getPixelFromDp(context, 4));
+                                    // 文字を中央になるよう調整
+                                    messageTextView.setGravity(Gravity.CENTER_VERTICAL);
+                                }
+                            } else {
+                                // 子View一個のLinearLayoutだが、TextViewじゃないらしい
+                                // TODO どーする？
+                            }
+                        } else {
+                            // 子Viewが二個以上
+                            // TODO 何かするべき？
+                        }
+                    }
+                } else {
+                    log("is not LinearLayout!");
+                    // LinearLayout以外の場合
+                    // まず間違いなくカスタムレイアウト
+
+                    // TODO どうする？何もしない？
                 }
-
-                // トーストのTextViewが取得できた場合
-
-                // ブロードキャスト用のIntentを作成
-                log("make ACTION_SHOW_TOAST Intent");
-                TextView tv = (TextView) findViewById;
-
-                // 各パラメータをintentにセット
-                Intent intent = new Intent(Const.ACTION_SHOW_TOAST);
-                intent.putExtra(Const.EXTRA_TOAST_MESSAGE, tv.getText());
-                intent.putExtra(Const.EXTRA_TOAST_DURATION, toast.getDuration());
-                intent.putExtra(Const.EXTRA_TOAST_GRAVITY, toast.getGravity());
-                intent.putExtra(Const.EXTRA_TOAST_HORIZONTAL_MARGIN,
-                        toast.getHorizontalMargin());
-                intent.putExtra(Const.EXTRA_TOAST_VERTICAL_MARGIN, toast.getVerticalMargin());
-                intent.putExtra(Const.EXTRA_TOAST_X_OFFSET, toast.getXOffset());
-                intent.putExtra(Const.EXTRA_TOAST_Y_OFFSET, toast.getYOffset());
-                intent.putExtra(Const.EXTRA_TOAST_ORIGINAL_PACKAGE_NAME, packageName);
-
-                // broadcast送信
-                log("sendBroadcast");
-                mContext.sendBroadcast(intent);
-
-                return null;
             }
         });
 
@@ -185,24 +241,5 @@ public class ModToast extends AbstractXposedModule implements IXposedHookZygoteI
         }
 
         log(getClass().getSimpleName() + " mission complete!");
-    }
-
-    /**
-     * トーストの表示レイヤーを変更する.
-     * 
-     * @param toast {@link Toast}
-     * @param enableOverlay トーストをオーバーレイ表示する場合はtrue、通常表示の場合はfalse
-     */
-    public static void updateToastType(Object toast, boolean enableOverlay) {
-        // Toastの中のフィールド「mTN」を取得
-        Object mTN = XposedHelpers.getObjectField(toast, "mTN");
-        // mParamsを取得
-        WindowManager.LayoutParams mParams = (LayoutParams) XposedHelpers
-                .getObjectField(mTN, "mParams");
-        // 引数によってレイヤーを変更
-        mParams.type = enableOverlay ? WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY
-                : WindowManager.LayoutParams.TYPE_TOAST;
-        // mParamsを更新
-        XposedHelpers.setObjectField(mTN, "mParams", mParams);
     }
 }

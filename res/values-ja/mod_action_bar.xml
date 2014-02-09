@@ -1,0 +1,8 @@
+<resources>
+    <string name="title_preference_screen_action_bar">アクションバー</string>
+    <string name="header_action_bar">設定変更は端末の再起動後に反映されます。</string>
+    <string name="title_master_mod_action_bar_enable">有効にする</string>
+    <string name="title_action_bar_bottom_enable">アクションバーを下に移動</string>
+    <string name="title_action_bar_bottom_packages">下表示にするアプリ</string>
+
+</resources>
