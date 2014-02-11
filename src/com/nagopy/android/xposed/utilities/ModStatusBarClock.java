@@ -21,6 +21,8 @@ import java.util.Calendar;
 import java.util.Locale;
 
 import android.annotation.SuppressLint;
+import android.app.KeyguardManager;
+import android.content.Context;
 import android.content.IntentFilter;
 import android.content.res.XModuleResources;
 import android.util.TypedValue;
@@ -189,6 +191,29 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                 clockView.startAnimation(anim);
             }
         });
+
+        // キーガード表示中に時計が消えるように
+        Class<?> clsPhoneStatusBar = XposedHelpers
+                .findClass("com.android.systemui.statusbar.phone.PhoneStatusBar",
+                        lpparam.classLoader);
+        XposedHelpers.findAndHookMethod(clsPhoneStatusBar, "showClock", boolean.class,
+                new XC_MethodReplacement() {
+                    @Override
+                    protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
+                        Context mContext = (Context) XposedHelpers.getObjectField(param.thisObject,
+                                "mContext");
+                        KeyguardManager keyguardManager = (KeyguardManager) mContext
+                                .getSystemService(Context.KEYGUARD_SERVICE);
+                        if (keyguardManager.inKeyguardRestrictedInputMode()) {
+                            return XposedBridge.invokeOriginalMethod(param.method,
+                                    param.thisObject, new Object[] {
+                                        false
+                                    });
+                        } else {
+                            return XUtil.invokeOriginalMethod(param);
+                        }
+                    }
+                });
     }
 
     @Override
