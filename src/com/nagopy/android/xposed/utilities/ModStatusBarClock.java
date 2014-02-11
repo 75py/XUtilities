@@ -25,6 +25,11 @@ import android.content.IntentFilter;
 import android.content.res.XModuleResources;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.nagopy.android.common.pref.FontListPreference;
@@ -38,7 +43,9 @@ import com.nagopy.android.xposed.utilities.util.Const;
 import de.robv.android.xposed.IXposedHookInitPackageResources;
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.IXposedHookZygoteInit;
+import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XC_MethodReplacement;
+import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_InitPackageResources.InitPackageResourcesParam;
 import de.robv.android.xposed.callbacks.XC_LayoutInflated;
@@ -97,6 +104,91 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                         return mClockFormat.format(mCalendar.getTime());
                     }
                 });
+
+        // ticker
+        Class<?> clsTicker = XposedHelpers
+                .findClass("com.android.systemui.statusbar.phone.PhoneStatusBar$MyTicker",
+                        lpparam.classLoader);
+        XposedBridge.hookAllConstructors(clsTicker, new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                View mStatusBarView = (View) param.args[2];
+                int status_bar_contents = mStatusBarView.getResources().getIdentifier(
+                        "status_bar_contents", "id", XConst.PKG_SYSTEM_UI);
+                View mStatusBarContents = mStatusBarView.findViewById(status_bar_contents);
+                XposedHelpers.setAdditionalInstanceField(param.thisObject, "mStatusBarContents",
+                        mStatusBarContents);
+
+                int clock = mStatusBarContents.getResources().getIdentifier("clock", "id",
+                        XConst.PKG_SYSTEM_UI);
+                View clockView = mStatusBarView.findViewById(clock);
+                XposedHelpers.setAdditionalInstanceField(param.thisObject, "clockView",
+                        clockView);
+            }
+        });
+
+        XposedHelpers.findAndHookMethod(clsTicker, "tickerStarting", new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                View mStatusBarContents = (View) XposedHelpers.getAdditionalInstanceField(
+                        param.thisObject, "mStatusBarContents");
+                View clockView = (View) XposedHelpers.getAdditionalInstanceField(
+                        param.thisObject, "clockView");
+
+                // デフォルトの位置にある場合は何もしない
+                Object currentPosition = clockView.getTag(R.id.tag_clock_current_position);
+                if (currentPosition == null
+                        || currentPosition.equals(Const.STATUS_BAR_CLOCK_POSITION_DEFAULT)) {
+                    return;
+                }
+
+                clockView.setVisibility(View.GONE);
+                Animation anim = mStatusBarContents.getAnimation();
+                clockView.startAnimation(anim);
+            }
+        });
+
+        XposedHelpers.findAndHookMethod(clsTicker, "tickerDone", new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                View mStatusBarContents = (View) XposedHelpers.getAdditionalInstanceField(
+                        param.thisObject, "mStatusBarContents");
+                View clockView = (View) XposedHelpers.getAdditionalInstanceField(
+                        param.thisObject, "clockView");
+
+                // デフォルトの位置にある場合は何もしない
+                Object currentPosition = clockView.getTag(R.id.tag_clock_current_position);
+                if (currentPosition == null
+                        || currentPosition.equals(Const.STATUS_BAR_CLOCK_POSITION_DEFAULT)) {
+                    return;
+                }
+
+                clockView.setVisibility(View.VISIBLE);
+                Animation anim = mStatusBarContents.getAnimation();
+                clockView.startAnimation(anim);
+            }
+        });
+
+        XposedHelpers.findAndHookMethod(clsTicker, "tickerHalting", new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                View mStatusBarContents = (View) XposedHelpers.getAdditionalInstanceField(
+                        param.thisObject, "mStatusBarContents");
+                View clockView = (View) XposedHelpers.getAdditionalInstanceField(
+                        param.thisObject, "clockView");
+
+                // デフォルトの位置にある場合は何もしない
+                Object currentPosition = clockView.getTag(R.id.tag_clock_current_position);
+                if (currentPosition == null
+                        || currentPosition.equals(Const.STATUS_BAR_CLOCK_POSITION_DEFAULT)) {
+                    return;
+                }
+
+                clockView.setVisibility(View.VISIBLE);
+                Animation anim = mStatusBarContents.getAnimation();
+                clockView.startAnimation(anim);
+            }
+        });
     }
 
     @Override
@@ -146,6 +238,7 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                                                 Const.ACTION_STATUS_BAR_CLOCK_SETTING_CHANGED));
                     }
                 });
+
     }
 
     /**
@@ -214,6 +307,42 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                     mClockFormatString, locale);
             XposedHelpers.setAdditionalInstanceField(clock,
                     ADDITIONAL_FIELD_FORMAT, mClockFormat);
+
+            // 表示位置
+            Object currentPosition = clock.getTag(R.id.tag_clock_current_position);
+            if (clockModDao.statusBarClockPosition
+                    .equals(Const.STATUS_BAR_CLOCK_POSITION_CENTER)) {
+                if (currentPosition == null
+                        || !currentPosition.equals(Const.STATUS_BAR_CLOCK_POSITION_CENTER)) {
+                    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT);
+                    params.gravity = Gravity.CENTER;
+                    LinearLayout viewSystemIconArea = (LinearLayout) clock.getParent();
+                    FrameLayout viewStatusBar = (FrameLayout) viewSystemIconArea.getParent()
+                            .getParent();
+                    viewSystemIconArea.removeView(clock);
+                    viewStatusBar.addView(clock, params);
+                    clock.setTag(R.id.tag_clock_current_position,
+                            Const.STATUS_BAR_CLOCK_POSITION_CENTER);
+                }
+            } else if (clockModDao.statusBarClockPosition
+                    .equals(Const.STATUS_BAR_CLOCK_POSITION_DEFAULT)) {
+                if (currentPosition == null
+                        || !currentPosition.equals(Const.STATUS_BAR_CLOCK_POSITION_DEFAULT)) {
+                    ViewGroup rootView = (ViewGroup) clock.getParent();
+                    int system_icon_area = clock.getContext().getResources()
+                            .getIdentifier("system_icon_area", "id", XConst.PKG_SYSTEM_UI);
+                    ViewGroup viewSystemIconArea = (ViewGroup) rootView
+                            .findViewById(system_icon_area);
+
+                    rootView.removeView(clock);
+                    viewSystemIconArea.addView(clock);
+
+                    clock.setTag(R.id.tag_clock_current_position,
+                            Const.STATUS_BAR_CLOCK_POSITION_DEFAULT);
+                }
+            }
         } else {// モジュール無効
             // デフォルト値をセットし、ADDITIONAL_FIELD_FORMATを削除
             clock.setTextSize(TypedValue.COMPLEX_UNIT_PX,
@@ -223,6 +352,23 @@ public class ModStatusBarClock extends AbstractXposedModule implements
             clock.setTypeface(clockModDao.defaultTypeface);
             XposedHelpers.removeAdditionalInstanceField(clock,
                     ADDITIONAL_FIELD_FORMAT);
+
+            // 表示位置
+            Object currentPosition = clock.getTag(R.id.tag_clock_current_position);
+            if (currentPosition == null
+                    || !currentPosition.equals(Const.STATUS_BAR_CLOCK_POSITION_DEFAULT)) {
+                ViewGroup rootView = (ViewGroup) clock.getParent();
+                int system_icon_area = clock.getContext().getResources()
+                        .getIdentifier("system_icon_area", "id", XConst.PKG_SYSTEM_UI);
+                ViewGroup viewSystemIconArea = (ViewGroup) rootView
+                        .findViewById(system_icon_area);
+
+                rootView.removeView(clock);
+                viewSystemIconArea.addView(clock);
+
+                clock.setTag(R.id.tag_clock_current_position,
+                        Const.STATUS_BAR_CLOCK_POSITION_DEFAULT);
+            }
         }
     }
 

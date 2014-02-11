@@ -14,4 +14,12 @@
     <!-- header -->
     <string name="header_status_bar_clock">ステータスバー時計の設定です。\nモジュールが有効になっている間は、設定変更がリアルタイムで反映されます。</string>
 
+    <!-- 表示位置 -->
+    <string name="title_status_bar_clock_position">表示位置</string>
+
+    <string-array name="status_bar_clock_position_name">
+        <item>デフォルト</item>
+        <item>中央</item>
+    </string-array>
+
 </resources>

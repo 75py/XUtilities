@@ -35,6 +35,10 @@ class ModStatusBarClockSettings {
     /** モジュールを有効にするかどうか */
     public Boolean masterModStatusBarEnable;
 
+    /** 時計の表示位置 */
+    @XStringDefaultValue(Const.STATUS_BAR_CLOCK_POSITION_DEFAULT)
+    public String statusBarClockPosition;
+
     /** 文字サイズ */
     @XIntDefaultValue(100)
     public int statusBarClockTextSize;
