@@ -37,4 +37,9 @@ public class Const {
     public static final String KEY_FIRST_FLAG = "KEY_FIRST_FLAG";
 
     public static final String KEY_GA_OPTOUT = "KEY_GA_OPTOUT";
+
+    /** ステータスバー時計の表示位置（中央） */
+    public static final String STATUS_BAR_CLOCK_POSITION_CENTER = "center";
+    /** ステータスバー時計の表示位置（デフォルト） */
+    public static final String STATUS_BAR_CLOCK_POSITION_DEFAULT = "default";
 }

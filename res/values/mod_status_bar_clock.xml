@@ -13,5 +13,16 @@
 
     <!-- header -->
     <string name="header_status_bar_clock">Statusbar clock settings.\nWhile this module is enabled, the changes will be applied immediately.</string>
+    <!-- 表示位置 -->
+    <string name="title_status_bar_clock_position">Position</string>
+
+    <string-array name="status_bar_clock_position_name">
+        <item>Default</item>
+        <item>Center</item>
+    </string-array>
+    <string-array name="status_bar_clock_position_value">
+        <item>default</item>
+        <item>center</item>
+    </string-array>
 
 </resources>

@@ -61,4 +61,12 @@
         android:summaryOn="RIGHT"
         android:title="@string/title_status_bar_clock_gravity_right" />
 
+    <com.nagopy.android.common.pref.ListPreference
+        android:defaultValue="default"
+        android:dependency="master_mod_status_bar_enable"
+        android:entries="@array/status_bar_clock_position_name"
+        android:entryValues="@array/status_bar_clock_position_value"
+        android:key="status_bar_clock_position"
+        android:title="@string/title_status_bar_clock_position" />
+
 </PreferenceScreen>

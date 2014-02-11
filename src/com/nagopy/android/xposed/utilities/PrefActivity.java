@@ -131,6 +131,7 @@ public class PrefActivity extends PreferenceActivity implements OnSharedPreferen
             case R.string.title_status_bar_clock_format:
             case R.string.title_status_bar_clock_gravity_bottom:
             case R.string.title_status_bar_clock_gravity_right:
+            case R.string.title_status_bar_clock_position:
                 intent.setAction(Const.ACTION_STATUS_BAR_CLOCK_SETTING_CHANGED);
                 break;
             case R.string.title_master_mod_lockscreen_clock_enable:
