@@ -28,8 +28,7 @@ public class AnalyticsUtil {
      */
     public static void pushPreferenceCategory(Context context, String value) {
         Tracker tracker = EasyTracker.getInstance(context);
-        MapBuilder builder = MapBuilder.createAppView().set(Fields.customDimension(1), value)
-                .set(Fields.SCREEN_NAME, value);
+        MapBuilder builder = MapBuilder.createAppView().set(Fields.SCREEN_NAME, value);
         tracker.send(builder.build());
     }
 
@@ -46,7 +45,7 @@ public class AnalyticsUtil {
             pushSettingChengedEvent(tracker, key, (Set<?>) newValue);
         } else {
             String newValueStr = newValue == null ? "nullpo" : String.valueOf(newValue);
-            tracker.send(MapBuilder.createEvent("preferenceChanged", key, urlEncode(newValueStr),
+            tracker.send(MapBuilder.createEvent("settingChenged", key, urlEncode(newValueStr),
                     null)
                     .build());
         }
@@ -62,7 +61,7 @@ public class AnalyticsUtil {
      */
     private static void pushSettingChengedEvent(Tracker tracker, String key, Set<?> newValue) {
         tracker.send(MapBuilder
-                .createEvent("prefSetChanged", key, String.valueOf(newValue.size()), null)
+                .createEvent("settingChengedSet", key, String.valueOf(newValue.size()), null)
                 .build());
     }
 
