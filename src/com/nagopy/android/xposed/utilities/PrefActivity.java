@@ -48,7 +48,7 @@ public class PrefActivity extends PreferenceActivity implements OnSharedPreferen
         SharedPreferences sp = PreferenceManager
                 .getDefaultSharedPreferences(getApplicationContext());
         GoogleAnalytics.getInstance(getApplicationContext()).setAppOptOut(
-                sp.getBoolean(Const.KEY_GA_OPTOUT, false));
+                sp.getBoolean(Const.KEY_GA_OPTOUT, true));
     }
 
     @Override
@@ -202,7 +202,7 @@ public class PrefActivity extends PreferenceActivity implements OnSharedPreferen
             super.onStart();
 
             // 設定画面名をGAでトラッキング
-            AnalyticsUtil.pushOpenScreenEvent(getActivity().getApplicationContext(),
+            AnalyticsUtil.pushPreferenceCategory(getActivity().getApplicationContext(),
                     getArguments().getString("xml_name"));
         }
 
@@ -211,7 +211,7 @@ public class PrefActivity extends PreferenceActivity implements OnSharedPreferen
             super.onStop();
 
             // 設定画面名をGAでトラッキング
-            AnalyticsUtil.pushCloseScreenEvent(getActivity().getApplicationContext(),
+            AnalyticsUtil.pushPreferenceCategory(getActivity().getApplicationContext(),
                     getArguments().getString("xml_name"));
         }
     }
