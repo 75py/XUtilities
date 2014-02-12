@@ -29,7 +29,6 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewParent;
 import android.view.animation.Animation;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -130,12 +129,6 @@ public class ModStatusBarClock extends AbstractXposedModule implements
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 View clockView = (View) XposedHelpers.getAdditionalInstanceField(
                         param.thisObject, "clockView");
-                Boolean isTarget = (Boolean) clockView.getTag(R.id.tag_status_bar_clock_is_target);
-
-                if (!isTarget) {
-                    // ターゲットじゃない場合は何もしない
-                    return;
-                }
 
                 // デフォルトの位置にある場合は何もしない
                 Object currentPosition = clockView.getTag(R.id.tag_clock_current_position);
@@ -158,12 +151,6 @@ public class ModStatusBarClock extends AbstractXposedModule implements
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 View clockView = (View) XposedHelpers.getAdditionalInstanceField(
                         param.thisObject, "clockView");
-                Boolean isTarget = (Boolean) clockView.getTag(R.id.tag_status_bar_clock_is_target);
-
-                if (!isTarget) {
-                    // ターゲットじゃない場合は何もしない
-                    return;
-                }
 
                 // デフォルトの位置にある場合は何もしない
                 Object currentPosition = clockView.getTag(R.id.tag_clock_current_position);
@@ -186,12 +173,6 @@ public class ModStatusBarClock extends AbstractXposedModule implements
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 View clockView = (View) XposedHelpers.getAdditionalInstanceField(
                         param.thisObject, "clockView");
-                Boolean isTarget = (Boolean) clockView.getTag(R.id.tag_status_bar_clock_is_target);
-
-                if (!isTarget) {
-                    // ターゲットじゃない場合は何もしない
-                    return;
-                }
 
                 // デフォルトの位置にある場合は何もしない
                 Object currentPosition = clockView.getTag(R.id.tag_clock_current_position);
@@ -425,18 +406,6 @@ public class ModStatusBarClock extends AbstractXposedModule implements
     private static void setViewHolder(TextView clockView) {
         Context context = clockView.getContext();
         Resources resources = context.getResources();
-
-        // 時計Viewが本来の場所にあったかどうかのフラグ
-        int system_icon_area = resources.getIdentifier("system_icon_area", "id",
-                XConst.PKG_SYSTEM_UI);
-        ViewParent parent = clockView.getParent();
-        if (parent instanceof LinearLayout
-                && ((LinearLayout) parent).getId() != system_icon_area) {
-            // Clockの上がLinearLayoutだけどIDが違う＝GravityBox
-            clockView.setTag(R.id.tag_status_bar_clock_is_target, false);
-        } else {
-            clockView.setTag(R.id.tag_status_bar_clock_is_target, true);
-        }
 
         int status_bar_contents = resources.getIdentifier(
                 "status_bar_contents", "id", XConst.PKG_SYSTEM_UI);
