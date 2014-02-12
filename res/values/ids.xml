@@ -2,5 +2,5 @@
 <resources>
 
     <item name="tag_clock_current_position" type="id">75757575</item>
-
-</resources>
+    <item name="tag_status_bar_clock_view_holder" type="id">75757576</item>
+</resources>
