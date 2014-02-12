@@ -2,5 +2,7 @@
 <resources>
 
     <item name="tag_clock_current_position" type="id">75757575</item>
+    <item name="tag_status_bar_clock_view_holder" type="id">75757576</item>
+    <item name="tag_status_bar_clock_is_target" type="id">75757577</item>
 
 </resources>

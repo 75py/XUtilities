@@ -20,15 +20,16 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 
-import android.annotation.SuppressLint;
 import android.app.KeyguardManager;
 import android.content.Context;
 import android.content.IntentFilter;
+import android.content.res.Resources;
 import android.content.res.XModuleResources;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.animation.Animation;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -52,6 +53,7 @@ import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_InitPackageResources.InitPackageResourcesParam;
 import de.robv.android.xposed.callbacks.XC_LayoutInflated;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
+import de.robv.android.xposed.callbacks.XCallback;
 
 /**
  * ステータスバーの時計をカスタマイズするモジュール.
@@ -111,19 +113,13 @@ public class ModStatusBarClock extends AbstractXposedModule implements
         Class<?> clsTicker = XposedHelpers
                 .findClass("com.android.systemui.statusbar.phone.PhoneStatusBar$MyTicker",
                         lpparam.classLoader);
-        XposedBridge.hookAllConstructors(clsTicker, new XC_MethodHook() {
+        XposedBridge.hookAllConstructors(clsTicker, new XC_MethodHook(XCallback.PRIORITY_LOWEST) {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 View mStatusBarView = (View) param.args[2];
-                int status_bar_contents = mStatusBarView.getResources().getIdentifier(
-                        "status_bar_contents", "id", XConst.PKG_SYSTEM_UI);
-                View mStatusBarContents = mStatusBarView.findViewById(status_bar_contents);
-                XposedHelpers.setAdditionalInstanceField(param.thisObject, "mStatusBarContents",
-                        mStatusBarContents);
-
-                int clock = mStatusBarContents.getResources().getIdentifier("clock", "id",
+                int clock = mStatusBarView.getResources().getIdentifier("clock", "id",
                         XConst.PKG_SYSTEM_UI);
-                View clockView = mStatusBarView.findViewById(clock);
+                View clockView = mStatusBarView.getRootView().findViewById(clock);
                 XposedHelpers.setAdditionalInstanceField(param.thisObject, "clockView",
                         clockView);
             }
@@ -132,10 +128,14 @@ public class ModStatusBarClock extends AbstractXposedModule implements
         XposedHelpers.findAndHookMethod(clsTicker, "tickerStarting", new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                View mStatusBarContents = (View) XposedHelpers.getAdditionalInstanceField(
-                        param.thisObject, "mStatusBarContents");
                 View clockView = (View) XposedHelpers.getAdditionalInstanceField(
                         param.thisObject, "clockView");
+                Boolean isTarget = (Boolean) clockView.getTag(R.id.tag_status_bar_clock_is_target);
+
+                if (!isTarget) {
+                    // ターゲットじゃない場合は何もしない
+                    return;
+                }
 
                 // デフォルトの位置にある場合は何もしない
                 Object currentPosition = clockView.getTag(R.id.tag_clock_current_position);
@@ -145,7 +145,10 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                 }
 
                 clockView.setVisibility(View.GONE);
-                Animation anim = mStatusBarContents.getAnimation();
+
+                ViewHolder viewHolder = (ViewHolder) clockView
+                        .getTag(R.id.tag_status_bar_clock_view_holder);
+                Animation anim = viewHolder.mStatusBarContents.getAnimation();
                 clockView.startAnimation(anim);
             }
         });
@@ -153,10 +156,14 @@ public class ModStatusBarClock extends AbstractXposedModule implements
         XposedHelpers.findAndHookMethod(clsTicker, "tickerDone", new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                View mStatusBarContents = (View) XposedHelpers.getAdditionalInstanceField(
-                        param.thisObject, "mStatusBarContents");
                 View clockView = (View) XposedHelpers.getAdditionalInstanceField(
                         param.thisObject, "clockView");
+                Boolean isTarget = (Boolean) clockView.getTag(R.id.tag_status_bar_clock_is_target);
+
+                if (!isTarget) {
+                    // ターゲットじゃない場合は何もしない
+                    return;
+                }
 
                 // デフォルトの位置にある場合は何もしない
                 Object currentPosition = clockView.getTag(R.id.tag_clock_current_position);
@@ -166,7 +173,10 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                 }
 
                 clockView.setVisibility(View.VISIBLE);
-                Animation anim = mStatusBarContents.getAnimation();
+
+                ViewHolder viewHolder = (ViewHolder) clockView
+                        .getTag(R.id.tag_status_bar_clock_view_holder);
+                Animation anim = viewHolder.mStatusBarContents.getAnimation();
                 clockView.startAnimation(anim);
             }
         });
@@ -174,10 +184,14 @@ public class ModStatusBarClock extends AbstractXposedModule implements
         XposedHelpers.findAndHookMethod(clsTicker, "tickerHalting", new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                View mStatusBarContents = (View) XposedHelpers.getAdditionalInstanceField(
-                        param.thisObject, "mStatusBarContents");
                 View clockView = (View) XposedHelpers.getAdditionalInstanceField(
                         param.thisObject, "clockView");
+                Boolean isTarget = (Boolean) clockView.getTag(R.id.tag_status_bar_clock_is_target);
+
+                if (!isTarget) {
+                    // ターゲットじゃない場合は何もしない
+                    return;
+                }
 
                 // デフォルトの位置にある場合は何もしない
                 Object currentPosition = clockView.getTag(R.id.tag_clock_current_position);
@@ -187,7 +201,10 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                 }
 
                 clockView.setVisibility(View.VISIBLE);
-                Animation anim = mStatusBarContents.getAnimation();
+
+                ViewHolder viewHolder = (ViewHolder) clockView
+                        .getTag(R.id.tag_status_bar_clock_view_holder);
+                Animation anim = viewHolder.mStatusBarContents.getAnimation();
                 clockView.startAnimation(anim);
             }
         });
@@ -227,8 +244,7 @@ public class ModStatusBarClock extends AbstractXposedModule implements
 
         // レイアウトをごにょごにょ
         resparam.res.hookLayout(XConst.PKG_SYSTEM_UI, "layout",
-                "super_status_bar", new XC_LayoutInflated() {
-                    @SuppressLint("NewApi")
+                "super_status_bar", new XC_LayoutInflated(-7575) { // 優先度低
                     @Override
                     public void handleLayoutInflated(LayoutInflatedParam liparam)
                             throws Throwable {
@@ -236,6 +252,9 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                         TextView clock = (TextView) liparam.view
                                 .findViewById(liparam.res.getIdentifier(
                                         "clock", "id", XConst.PKG_SYSTEM_UI));
+
+                        // GravityBoxとの競合チェック、ViewHolderセットなど
+                        setViewHolder(clock);
 
                         // デフォルト値を保存
                         mStatusBarClockSettings.defaultStatusBarClockTextSize = clock
@@ -343,9 +362,9 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                             LinearLayout.LayoutParams.MATCH_PARENT,
                             LinearLayout.LayoutParams.WRAP_CONTENT);
                     params.gravity = Gravity.CENTER;
-                    LinearLayout viewSystemIconArea = (LinearLayout) clock.getParent();
-                    FrameLayout viewStatusBar = (FrameLayout) viewSystemIconArea.getParent()
-                            .getParent();
+                    ViewGroup viewSystemIconArea = (ViewGroup) clock.getParent();
+                    FrameLayout viewStatusBar = (FrameLayout) ((ViewHolder) clock
+                            .getTag(R.id.tag_status_bar_clock_view_holder)).mStatusBarView;
                     viewSystemIconArea.removeView(clock);
                     viewStatusBar.addView(clock, params);
                     clock.setTag(R.id.tag_clock_current_position,
@@ -355,13 +374,16 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                     .equals(Const.STATUS_BAR_CLOCK_POSITION_DEFAULT)) {
                 if (currentPosition == null
                         || !currentPosition.equals(Const.STATUS_BAR_CLOCK_POSITION_DEFAULT)) {
-                    ViewGroup rootView = (ViewGroup) clock.getParent();
+                    ViewGroup rootView = (ViewGroup) clock.getRootView();
                     int system_icon_area = clock.getContext().getResources()
                             .getIdentifier("system_icon_area", "id", XConst.PKG_SYSTEM_UI);
                     ViewGroup viewSystemIconArea = (ViewGroup) rootView
                             .findViewById(system_icon_area);
 
-                    rootView.removeView(clock);
+                    // Parentから削除
+                    ViewGroup parentView = (ViewGroup) clock.getParent();
+                    parentView.removeView(clock);
+                    // system_icon_areaに追加
                     viewSystemIconArea.addView(clock);
 
                     clock.setTag(R.id.tag_clock_current_position,
@@ -380,21 +402,57 @@ public class ModStatusBarClock extends AbstractXposedModule implements
 
             // 表示位置
             Object currentPosition = clock.getTag(R.id.tag_clock_current_position);
-            if (currentPosition == null
-                    || !currentPosition.equals(Const.STATUS_BAR_CLOCK_POSITION_DEFAULT)) {
-                ViewGroup rootView = (ViewGroup) clock.getParent();
+            if (currentPosition != null
+                    && !currentPosition.equals(Const.STATUS_BAR_CLOCK_POSITION_DEFAULT)) {
+                ViewGroup rootView = (ViewGroup) clock.getRootView();
                 int system_icon_area = clock.getContext().getResources()
                         .getIdentifier("system_icon_area", "id", XConst.PKG_SYSTEM_UI);
                 ViewGroup viewSystemIconArea = (ViewGroup) rootView
                         .findViewById(system_icon_area);
 
-                rootView.removeView(clock);
+                // Parentから削除
+                ViewGroup parentView = (ViewGroup) clock.getParent();
+                parentView.removeView(clock);
+                // system_icon_areaに追加
                 viewSystemIconArea.addView(clock);
 
                 clock.setTag(R.id.tag_clock_current_position,
                         Const.STATUS_BAR_CLOCK_POSITION_DEFAULT);
             }
         }
+    }
+
+    private static void setViewHolder(TextView clockView) {
+        Context context = clockView.getContext();
+        Resources resources = context.getResources();
+
+        // 時計Viewが本来の場所にあったかどうかのフラグ
+        int system_icon_area = resources.getIdentifier("system_icon_area", "id",
+                XConst.PKG_SYSTEM_UI);
+        ViewParent parent = clockView.getParent();
+        if (parent instanceof LinearLayout
+                && ((LinearLayout) parent).getId() != system_icon_area) {
+            // Clockの上がLinearLayoutだけどIDが違う＝GravityBox
+            clockView.setTag(R.id.tag_status_bar_clock_is_target, false);
+        } else {
+            clockView.setTag(R.id.tag_status_bar_clock_is_target, true);
+        }
+
+        int status_bar_contents = resources.getIdentifier(
+                "status_bar_contents", "id", XConst.PKG_SYSTEM_UI);
+        int status_bar = resources.getIdentifier(
+                "status_bar", "id", XConst.PKG_SYSTEM_UI);
+
+        View rootView = clockView.getRootView();
+        ViewHolder viewHolder = new ViewHolder();
+        viewHolder.mStatusBarView = rootView.findViewById(status_bar);
+        viewHolder.mStatusBarContents = rootView.findViewById(status_bar_contents);
+        clockView.setTag(R.id.tag_status_bar_clock_view_holder, viewHolder);
+    }
+
+    public static class ViewHolder {
+        View mStatusBarView;
+        View mStatusBarContents;
     }
 
     /**
