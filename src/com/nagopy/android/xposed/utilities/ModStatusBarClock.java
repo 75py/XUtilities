@@ -20,7 +20,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 
-import android.app.KeyguardManager;
 import android.content.Context;
 import android.content.IntentFilter;
 import android.content.res.Resources;
@@ -196,20 +195,22 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                         lpparam.classLoader);
         XposedHelpers.findAndHookMethod(clsPhoneStatusBar, "showClock", boolean.class,
                 new XC_MethodReplacement() {
+
                     @Override
                     protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
-                        Context mContext = (Context) XposedHelpers.getObjectField(param.thisObject,
-                                "mContext");
-                        KeyguardManager keyguardManager = (KeyguardManager) mContext
-                                .getSystemService(Context.KEYGUARD_SERVICE);
-                        if (keyguardManager.inKeyguardRestrictedInputMode()) {
-                            return XposedBridge.invokeOriginalMethod(param.method,
-                                    param.thisObject, new Object[] {
-                                        false
-                                    });
-                        } else {
-                            return XUtil.invokeOriginalMethod(param);
+                        View mStatusBarView = (View) XposedHelpers.getObjectField(param.thisObject,
+                                "mStatusBarView");
+                        if (mStatusBarView == null)
+                            return null;
+
+                        boolean show = (Boolean) param.args[0];
+                        int clockId = mStatusBarView.getResources().getIdentifier("clock", "id",
+                                XConst.PKG_SYSTEM_UI);
+                        View clock = mStatusBarView.getRootView().findViewById(clockId);
+                        if (clock != null) {
+                            clock.setVisibility(show ? View.VISIBLE : View.GONE);
                         }
+                        return null;
                     }
                 });
     }
