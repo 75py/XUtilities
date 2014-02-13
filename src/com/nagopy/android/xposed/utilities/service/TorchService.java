@@ -49,7 +49,7 @@ import com.nagopy.android.common.helper.TorchHelper;
  * ライト点灯を行うサービス.
  */
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-public class TorchService extends Service {
+public class TorchService extends Service implements TorchHelper.TorchStatusListener {
 
     /** ライトのオン・オフを切り替え */
     public static final String ACTION_TORCH_TOGGLE = "com.nagopy.android.xposed.utilities.service.TorchService.ACTION_TORCH_TOGGLE";
@@ -79,6 +79,7 @@ public class TorchService extends Service {
     public void onCreate() {
         super.onCreate();
         mTorch = TorchHelper.getInstance();
+        mTorch.listener.add(this);
 
         // 点灯中の通知アイコン等を作成
         Notification.Builder builder = new Notification.Builder(this);
@@ -97,9 +98,9 @@ public class TorchService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && ACTION_TORCH_TOGGLE.equals(intent.getAction())) {
-            mTorch.toggle();
+            mTorch.toggle(getApplicationContext());
         } else if (intent != null && ACTION_TORCH_ON.equals(intent.getAction())) {
-            mTorch.on();
+            mTorch.on(getApplicationContext());
         } else if (intent != null && ACTION_TORCH_OFF.equals(intent.getAction())) {
             mTorch.off();
         }
@@ -111,22 +112,25 @@ public class TorchService extends Service {
         broadcast.putExtra(EXTRA_TORCH_IS_ON, isON);
         sendBroadcast(broadcast);
 
-        if (isON) {
-            // 通知アイコンを表示し、フォアグラウンドに
-            startForeground(R.drawable.ic_flashlight, mNotification);
-            // TODO タイマーで消灯する処理
-            return START_REDELIVER_INTENT;
-        } else {
-            // サービスを終了させる
-            stopForeground(true);
-            stopSelf();
-            return START_NOT_STICKY;
-        }
+        return isON ? START_REDELIVER_INTENT : START_NOT_STICKY;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         mTorch.off();
+    }
+
+    @Override
+    public void onTorchON() {
+        // 通知アイコンを表示し、フォアグラウンドに
+        startForeground(R.drawable.ic_flashlight, mNotification);
+    }
+
+    @Override
+    public void onTorchOFF() {
+        // サービスを終了させる
+        stopForeground(true);
+        stopSelf();
     }
 }
