@@ -19,10 +19,12 @@
     <string-array name="status_bar_clock_position_name">
         <item>Default</item>
         <item>Center</item>
+        <item>Left</item>
     </string-array>
     <string-array name="status_bar_clock_position_value">
         <item>default</item>
         <item>center</item>
+        <item>left</item>
     </string-array>
 
 </resources>

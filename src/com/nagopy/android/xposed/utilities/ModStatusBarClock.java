@@ -34,6 +34,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.nagopy.android.common.pref.FontListPreference;
+import com.nagopy.android.common.util.DimenUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XConst;
 import com.nagopy.android.xposed.util.XLog;
@@ -132,7 +133,7 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                 // デフォルトの位置にある場合は何もしない
                 Object currentPosition = clockView.getTag(R.id.tag_clock_current_position);
                 if (currentPosition == null
-                        || currentPosition.equals(Const.STATUS_BAR_CLOCK_POSITION_DEFAULT)) {
+                        || currentPosition.equals(Const.SB_CLOCK_POSITION_DEFAULT)) {
                     return;
                 }
 
@@ -154,7 +155,7 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                 // デフォルトの位置にある場合は何もしない
                 Object currentPosition = clockView.getTag(R.id.tag_clock_current_position);
                 if (currentPosition == null
-                        || currentPosition.equals(Const.STATUS_BAR_CLOCK_POSITION_DEFAULT)) {
+                        || currentPosition.equals(Const.SB_CLOCK_POSITION_DEFAULT)) {
                     return;
                 }
 
@@ -176,7 +177,7 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                 // デフォルトの位置にある場合は何もしない
                 Object currentPosition = clockView.getTag(R.id.tag_clock_current_position);
                 if (currentPosition == null
-                        || currentPosition.equals(Const.STATUS_BAR_CLOCK_POSITION_DEFAULT)) {
+                        || currentPosition.equals(Const.SB_CLOCK_POSITION_DEFAULT)) {
                     return;
                 }
 
@@ -336,10 +337,9 @@ public class ModStatusBarClock extends AbstractXposedModule implements
 
             // 表示位置
             Object currentPosition = clock.getTag(R.id.tag_clock_current_position);
-            if (clockModDao.statusBarClockPosition
-                    .equals(Const.STATUS_BAR_CLOCK_POSITION_CENTER)) {
+            if (clockModDao.statusBarClockPosition.equals(Const.SB_CLOCK_POSITION_CENTER)) {
                 if (currentPosition == null
-                        || !currentPosition.equals(Const.STATUS_BAR_CLOCK_POSITION_CENTER)) {
+                        || !currentPosition.equals(Const.SB_CLOCK_POSITION_CENTER)) {
                     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
                             LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -349,13 +349,39 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                             .getTag(R.id.tag_status_bar_clock_view_holder)).mStatusBarView;
                     viewSystemIconArea.removeView(clock);
                     viewStatusBar.addView(clock, params);
-                    clock.setTag(R.id.tag_clock_current_position,
-                            Const.STATUS_BAR_CLOCK_POSITION_CENTER);
+                    clock.setTag(R.id.tag_clock_current_position, Const.SB_CLOCK_POSITION_CENTER);
                 }
-            } else if (clockModDao.statusBarClockPosition
-                    .equals(Const.STATUS_BAR_CLOCK_POSITION_DEFAULT)) {
+            } else if (clockModDao.statusBarClockPosition.equals(Const.SB_CLOCK_POSITION_LEFT)) {
+                // 左表示
                 if (currentPosition == null
-                        || !currentPosition.equals(Const.STATUS_BAR_CLOCK_POSITION_DEFAULT)) {
+                        || !currentPosition.equals(Const.SB_CLOCK_POSITION_LEFT)) {
+                    // 追加用LayoutParams作成
+                    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT);
+                    params.gravity = Gravity.CENTER_VERTICAL;
+                    params.rightMargin = DimenUtil.getPixelFromDp(clock.getContext(), 6);
+
+                    // 親View取得
+                    ViewGroup viewSystemIconArea = (ViewGroup) clock.getParent();
+
+                    // 追加する親Viewを取得
+                    LinearLayout viewStatusBar = (LinearLayout) ((ViewHolder) clock
+                            .getTag(R.id.tag_status_bar_clock_view_holder)).mStatusBarContents;
+
+                    // 現在の親Viewから削除
+                    viewSystemIconArea.removeView(clock);
+
+                    // ターゲットのViewに追加
+                    viewStatusBar.addView(clock, 0, params);
+
+                    // 今の状態を保存
+                    clock.setTag(R.id.tag_clock_current_position,
+                            Const.SB_CLOCK_POSITION_LEFT);
+                }
+            } else if (clockModDao.statusBarClockPosition.equals(Const.SB_CLOCK_POSITION_DEFAULT)) {
+                if (currentPosition == null
+                        || !currentPosition.equals(Const.SB_CLOCK_POSITION_DEFAULT)) {
                     ViewGroup rootView = (ViewGroup) clock.getRootView();
                     int system_icon_area = clock.getContext().getResources()
                             .getIdentifier("system_icon_area", "id", XConst.PKG_SYSTEM_UI);
@@ -369,7 +395,7 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                     viewSystemIconArea.addView(clock);
 
                     clock.setTag(R.id.tag_clock_current_position,
-                            Const.STATUS_BAR_CLOCK_POSITION_DEFAULT);
+                            Const.SB_CLOCK_POSITION_DEFAULT);
                 }
             }
         } else {// モジュール無効
@@ -385,7 +411,7 @@ public class ModStatusBarClock extends AbstractXposedModule implements
             // 表示位置
             Object currentPosition = clock.getTag(R.id.tag_clock_current_position);
             if (currentPosition != null
-                    && !currentPosition.equals(Const.STATUS_BAR_CLOCK_POSITION_DEFAULT)) {
+                    && !currentPosition.equals(Const.SB_CLOCK_POSITION_DEFAULT)) {
                 ViewGroup rootView = (ViewGroup) clock.getRootView();
                 int system_icon_area = clock.getContext().getResources()
                         .getIdentifier("system_icon_area", "id", XConst.PKG_SYSTEM_UI);
@@ -399,7 +425,7 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                 viewSystemIconArea.addView(clock);
 
                 clock.setTag(R.id.tag_clock_current_position,
-                        Const.STATUS_BAR_CLOCK_POSITION_DEFAULT);
+                        Const.SB_CLOCK_POSITION_DEFAULT);
             }
         }
     }
