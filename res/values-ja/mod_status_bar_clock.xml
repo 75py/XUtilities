@@ -20,6 +20,7 @@
     <string-array name="status_bar_clock_position_name">
         <item>デフォルト</item>
         <item>中央</item>
+        <item>左</item>
     </string-array>
 
 </resources>

@@ -36,7 +36,7 @@ class ModStatusBarClockSettings {
     public Boolean masterModStatusBarEnable;
 
     /** 時計の表示位置 */
-    @XStringDefaultValue(Const.STATUS_BAR_CLOCK_POSITION_DEFAULT)
+    @XStringDefaultValue(Const.SB_CLOCK_POSITION_DEFAULT)
     public String statusBarClockPosition;
 
     /** 文字サイズ */

@@ -38,8 +38,10 @@ public class Const {
 
     public static final String KEY_GA_OPTOUT = "KEY_GA_OPTOUT";
 
+    /** ステータスバー時計の表示位置（左） */
+    public static final String SB_CLOCK_POSITION_LEFT = "left";
     /** ステータスバー時計の表示位置（中央） */
-    public static final String STATUS_BAR_CLOCK_POSITION_CENTER = "center";
+    public static final String SB_CLOCK_POSITION_CENTER = "center";
     /** ステータスバー時計の表示位置（デフォルト） */
-    public static final String STATUS_BAR_CLOCK_POSITION_DEFAULT = "default";
+    public static final String SB_CLOCK_POSITION_DEFAULT = "default";
 }
