@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enabled="@bool/is_kitkat_or_later"
+    android:title="@string/title_preference_screen_app_picker" >
+
+    <com.nagopy.android.common.pref.TextPreference text="@string/header_app_picker" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="master_mod_app_picker_enable"
+        android:title="@string/title_master_mod_app_picker_enable" />
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:dependency="master_mod_app_picker_enable"
+        android:key="show_always_use"
+        android:title="@string/title_show_always_use" />
+
+    <com.nagopy.android.common.pref.AppListPreference
+        android:dependency="master_mod_app_picker_enable"
+        android:key="app_picker_black_list"
+        android:title="@string/title_app_picker_black_list" />
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:dependency="master_mod_app_picker_enable"
+        android:key="setting_always_per_apps"
+        android:title="@string/title_setting_always_per_apps" />
+
+    <Preference
+        android:dependency="setting_always_per_apps"
+        android:title="@string/title_per_apps_settings" >
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetClass="com.nagopy.android.xposed.utilities.preference.AlwaysUsePerAppsSettingActivity"
+            android:targetPackage="com.nagopy.android.xposed.utilities" />
+    </Preference>
+
+</PreferenceScreen>

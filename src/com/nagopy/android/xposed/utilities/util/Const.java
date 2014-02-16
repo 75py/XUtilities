@@ -44,4 +44,11 @@ public class Const {
     public static final String SB_CLOCK_POSITION_CENTER = "center";
     /** ステータスバー時計の表示位置（デフォルト） */
     public static final String SB_CLOCK_POSITION_DEFAULT = "default";
+
+    public static final String ACTION_ALWAYS_USE_PER_APPS = "com.nagopy.android.xposed.utilities.ACTION_ALWAYS_USE_PER_APPS";
+    public static final String EXTRA_LAUNCHED_FROM_PKG = "com.nagopy.android.xposed.utilities.EXTRA_LAUNCHED_FROM_PKG";
+    public static final String EXTRA_TARGET_PACKAGE_NAME = "com.nagopy.android.xposed.utilities.EXTRA_TARGET_PACKAGE_NAME";
+    public static final String EXTRA_TARGET_ACTIVITY_NAME = "com.nagopy.android.xposed.utilities.EXTRA_TARGET_ACTIVITY_NAME";
+    public static final String EXTRA_TARGET_ACTION = "com.nagopy.android.xposed.utilities.EXTRA_TARGET_ACTION";
+    public static final String ACTION_APP_PICKER_SETTING_CHANGED = "com.nagopy.android.xposed.utilities.ACTION_APP_PICKER_SETTING_CHANGED";
 }

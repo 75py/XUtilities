@@ -22,5 +22,14 @@
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
     <string name="alwaysUse" msgid="4583018368000610438">"常にこの操作で使用する"</string>
+    
+    <!-- settings -->
+    <string name="title_preference_screen_app_picker">共有選択</string>
+    <string name="header_app_picker">設定変更は端末の再起動後に反映されます。</string>
+    <string name="title_master_mod_app_picker_enable">有効にする</string>
+    <string name="title_show_always_use">「常にこの操作で使用」を表示</string>
+    <string name="title_app_picker_black_list">非表示アプリ</string>
+    <string name="title_setting_always_per_apps">「常に」をアプリごとに保存</string>
+    <string name="title_per_apps_settings">アプリごとの設定</string>
 
 </resources>

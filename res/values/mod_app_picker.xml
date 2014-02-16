@@ -21,4 +21,13 @@
 
     <string name="alwaysUse">Use by default for this action.</string>
 
+    <!-- settings -->
+    <string name="title_preference_screen_app_picker">App picker</string>
+    <string name="header_app_picker">The changes will be applied after reboot.</string>
+    <string name="title_master_mod_app_picker_enable">Enable ModAppPicker</string>
+    <string name="title_show_always_use">Show always use checkbox</string>
+    <string name="title_app_picker_black_list">Hide apps</string>
+    <string name="title_setting_always_per_apps">Save \'always\' per apps</string>
+    <string name="title_per_apps_settings">Per apps settings</string>
+
 </resources>

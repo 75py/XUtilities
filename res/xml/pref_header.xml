@@ -71,6 +71,14 @@
     </header>
     <header
         android:fragment="com.nagopy.android.xposed.utilities.PrefActivity$ModPreferenceFragment"
+        android:title="@string/title_preference_screen_app_picker" >
+        <extra
+            android:name="xml_name"
+            android:value="@xml/pref_mod_app_picker" >
+        </extra>
+    </header>
+    <header
+        android:fragment="com.nagopy.android.xposed.utilities.PrefActivity$ModPreferenceFragment"
         android:title="@string/title_preference_screen_other_utilities" >
         <extra
             android:name="xml_name"
