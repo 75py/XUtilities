@@ -28,45 +28,42 @@ import android.content.res.XModuleResources;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.util.TypedValue;
-import android.widget.TextClock;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.nagopy.android.common.pref.FontListPreference;
 import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.SettingChangedReceiver;
+import com.nagopy.android.xposed.util.XConst;
+import com.nagopy.android.xposed.util.XLog;
 import com.nagopy.android.xposed.util.XUtil;
-import com.nagopy.android.xposed.utilities.setting.ModLockscreenClockSettingsGen;
+import com.nagopy.android.xposed.utilities.setting.ModNotificationExpandedClockSettingsGen;
 import com.nagopy.android.xposed.utilities.util.Const;
 
 import de.robv.android.xposed.IXposedHookInitPackageResources;
+import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_InitPackageResources.InitPackageResourcesParam;
 import de.robv.android.xposed.callbacks.XC_LayoutInflated;
+import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 
 /**
  * ロックスクリーンの時計をカスタマイズするモジュール.
  */
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-public class ModLockscreenClock extends AbstractXposedModule implements
-        IXposedHookZygoteInit, IXposedHookInitPackageResources {
+public class ModNotificationExpandedClock extends AbstractXposedModule implements
+        IXposedHookZygoteInit, IXposedHookLoadPackage, IXposedHookInitPackageResources {
 
     private static final String ADDITIONAL_FORMAT = Const.ADDITIONAL_DATE_FORMAT;
 
     private String modulePath;
 
     @XResource
-    private ModLockscreenClockSettingsGen mLockscreenClockSettings;
-
-    /** フォーマットの保存キー */
-    // private static final String ADDITIONAL_FIELD_FORMAT =
-    // "modLockscreenClockFormat";
-
-    /** キーガードのパッケージ名 */
-    private static final String PACKAGE_KEYGUARD = "com.android.keyguard";
+    private ModNotificationExpandedClockSettingsGen mSettings;
 
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
@@ -79,65 +76,74 @@ public class ModLockscreenClock extends AbstractXposedModule implements
 
         modulePath = startupParam.modulePath;
 
-        // chooseFormatをフック
-        // フォーマットに「秒がある場合は秒更新を行う」ロジックがもともとあるので、それを使用するため
-        XposedHelpers.findAndHookMethod(TextClock.class, "chooseFormat",
-                boolean.class, new XC_MethodHook() {
-                    @Override
-                    protected void beforeHookedMethod(MethodHookParam param)
-                            throws Throwable {
-                        Object format = XposedHelpers
-                                .getAdditionalInstanceField(param.thisObject,
-                                        ADDITIONAL_FORMAT);
-                        if (format == null) {
-                            // 追加フィールドがない場合は何もしない
-                            return;
-                        }
-                        // このモジュールで追加した値がある場合は、mFormat12と24に値をセット
-                        // オリジナルのchooseFormatでmFormat24またはmFormat12がmFormatに入る
-                        SimpleDateFormat simpleDateFormat = (SimpleDateFormat) format;
-                        String formatString = simpleDateFormat.toPattern();
-                        XposedHelpers.setObjectField(param.thisObject,
-                                "mFormat24", formatString);
-                        XposedHelpers.setObjectField(param.thisObject,
-                                "mFormat12", formatString);
-                    }
-                });
+        log("initZygote end");
+    }
 
-        // 時計更新メソッドを書き換え
-        XposedHelpers.findAndHookMethod(TextClock.class, "onTimeChanged",
+    @Override
+    public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
+        if (!XUtil.isSystemUi(lpparam)) {
+            return;
+        }
+
+        // Clockのクラスを取得
+        final Class<?> clockClass = XposedHelpers.findClass(
+                "com.android.systemui.statusbar.policy.Clock",
+                lpparam.classLoader);
+
+        // 時計の文字を返すメソッドを書き換え
+        XposedHelpers.findAndHookMethod(clockClass, "getSmallTime",
                 new XC_MethodReplacement() {
                     @Override
                     protected Object replaceHookedMethod(MethodHookParam param)
                             throws Throwable {
-                        Object format = XposedHelpers
+                        Object additionalInstanceField = XposedHelpers
                                 .getAdditionalInstanceField(param.thisObject,
                                         ADDITIONAL_FORMAT);
-                        if (format == null) {
-                            // 追加フィールドがない場合は通常の処理を実行
+                        log(additionalInstanceField);
+                        if (additionalInstanceField == null) {
+                            // モジュールで追加した値がない場合は元のメソッドを実行
                             return XUtil.invokeOriginalMethod(param);
-                        } else {
-                            // 設定値を使用して時計を更新
-                            TextClock textClock = (TextClock) param.thisObject;
-                            Calendar mTime = (Calendar) XposedHelpers
-                                    .getObjectField(textClock, "mTime");
-                            mTime.setTimeInMillis(System.currentTimeMillis());
-                            SimpleDateFormat simpleDateFormat = (SimpleDateFormat) format;
-                            textClock.setText(simpleDateFormat.format(mTime
-                                    .getTime()));
-                            return null;
                         }
+
+                        // モジュールで設定したフォーマットを使用して時計の文字を作成する
+                        Calendar mCalendar = (Calendar) XposedHelpers
+                                .getObjectField(param.thisObject, "mCalendar");
+                        SimpleDateFormat mClockFormat = (SimpleDateFormat) additionalInstanceField;
+                        return mClockFormat.format(mCalendar.getTime());
                     }
                 });
 
-        log("initZygote end");
+        Class<?> clsDateView = XposedHelpers.findClass(
+                "com.android.systemui.statusbar.policy.DateView",
+                lpparam.classLoader);
+        // updateClock
+        XposedHelpers.findAndHookMethod(clsDateView, "updateClock", new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                Object mDateFormat = XposedHelpers.getObjectField(param.thisObject, "mDateFormat");
+                if (mDateFormat == null) {
+                    // フォーマットを更新
+
+                    Object additionalInstanceField = XposedHelpers
+                            .getAdditionalInstanceField(param.thisObject,
+                                    ADDITIONAL_FORMAT);
+                    if (additionalInstanceField == null) {
+                        // モジュールで追加した値がない場合は元のメソッドを実行
+                        return;
+                    }
+
+                    // フォーマットをセット
+                    XposedHelpers.setObjectField(param.thisObject, "mDateFormat",
+                            additionalInstanceField);
+                }
+            }
+        });
     }
 
     @Override
     public void handleInitPackageResources(
             final InitPackageResourcesParam resparam) throws Throwable {
-        if (!resparam.packageName.equals(PACKAGE_KEYGUARD)) {
-            // キーガード以外では何もしない
+        if (!XUtil.isSystemUi(resparam)) {
             return;
         }
         if (!VersionUtil.isJBmr1OrLater()) {
@@ -145,54 +151,56 @@ public class ModLockscreenClock extends AbstractXposedModule implements
             log("handleLoadPackage. do nothing.");
             return;
         }
+
         log("handleInitPackageResources target:" + resparam.packageName);
         // レイアウトをごにょごにょ
-        resparam.res.hookLayout(PACKAGE_KEYGUARD, "layout",
-                "keyguard_status_view", new XC_LayoutInflated() {
+        resparam.res.hookLayout(XConst.PKG_SYSTEM_UI, "layout",
+                "super_status_bar", new XC_LayoutInflated() {
                     @Override
                     public void handleLayoutInflated(LayoutInflatedParam liparam)
                             throws Throwable {
                         // 時計のビューを取得
-                        TextClock mDateView = (TextClock) liparam.view
+                        ViewGroup datetimeViewGroup = (ViewGroup) liparam.view
                                 .findViewById(liparam.res.getIdentifier(
-                                        "date_view", "id", PACKAGE_KEYGUARD));
-                        TextClock mClockView = (TextClock) liparam.view
+                                        "datetime", "id", XConst.PKG_SYSTEM_UI));
+                        TextView mDateView = (TextView) datetimeViewGroup
                                 .findViewById(liparam.res.getIdentifier(
-                                        "clock_view", "id", PACKAGE_KEYGUARD));
+                                        "date", "id", XConst.PKG_SYSTEM_UI));
+                        TextView mClockView = (TextView) datetimeViewGroup
+                                .findViewById(liparam.res.getIdentifier(
+                                        "clock", "id", XConst.PKG_SYSTEM_UI));
                         // デフォルト値を保存
-                        mLockscreenClockSettings.defaultTimeTextSize = mClockView
+                        mSettings.defaultTimeTextSize = mClockView
                                 .getTextSize();
-                        mLockscreenClockSettings.defaultTimeTextColor = mClockView
+                        mSettings.defaultTimeTextColor = mClockView
                                 .getTextColors().getDefaultColor();
-                        mLockscreenClockSettings.defaultTimeTypeface = mClockView
+                        mSettings.defaultTimeTypeface = mClockView
                                 .getTypeface();
-                        mLockscreenClockSettings.defaultDateTextSize = mDateView
+                        mSettings.defaultDateTextSize = mDateView
                                 .getTextSize();
-                        mLockscreenClockSettings.defaultDateTextColor = mDateView
+                        mSettings.defaultDateTextColor = mDateView
                                 .getTextColors().getDefaultColor();
-                        mLockscreenClockSettings.defaultDateTypeface = mDateView
+                        mSettings.defaultDateTypeface = mDateView
                                 .getTypeface();
 
                         // モジュールリソース取得用の値をDaoに追加
-                        mLockscreenClockSettings.moduleResources = XModuleResources
+                        mSettings.moduleResources = XModuleResources
                                 .createInstance(modulePath, resparam.res);
 
                         // モジュールの設定を保存
                         updateSettings(mDateView, mClockView,
-                                mLockscreenClockSettings);
+                                mSettings);
                         // 時計を更新
                         update(mDateView, mClockView);
 
                         // 設定変更をリアルタイムに反映させるためのレシーバーを登録
                         Context context = mClockView.getContext();
                         context.registerReceiver(
-                                new ModLockscreenClockSettingChangedReceiver(
-                                        mDateView,
-                                        mClockView,
-                                        mLockscreenClockSettings,
-                                        Const.ACTION_LOCKSCREEN_CLOCK_SETTING_CHANGED),
+                                new ModNotificationExpandedClockSettingChangedReceiver(
+                                        mDateView, mClockView, mSettings,
+                                        Const.ACTION_NOTIFICATION_EXPANDED_CLOCK_SETTING_CHANGED),
                                 new IntentFilter(
-                                        Const.ACTION_LOCKSCREEN_CLOCK_SETTING_CHANGED));
+                                        Const.ACTION_NOTIFICATION_EXPANDED_CLOCK_SETTING_CHANGED));
 
                     }
                 });
@@ -205,9 +213,15 @@ public class ModLockscreenClock extends AbstractXposedModule implements
      * @param mClockView
      */
     private static void update(TextView mDateView, TextView mClockView) {
-        // initを実行
-        XposedHelpers.callMethod(mDateView, "init");
-        XposedHelpers.callMethod(mClockView, "init");
+        try {
+            XposedHelpers.setObjectField(mDateView, "mDateFormat", null);
+            XposedHelpers.callMethod(mDateView, "updateClock");
+
+            XposedHelpers.callMethod(mClockView, "updateClock");
+        } catch (Throwable t) {
+            XLog.e(ModNotificationExpandedClock.class.getSimpleName(), t + ", " + mDateView + ", "
+                    + mClockView);
+        }
     }
 
     /**
@@ -217,40 +231,46 @@ public class ModLockscreenClock extends AbstractXposedModule implements
      * @param clockModDao {@link GenModStatusBarClockDao}
      */
     private static void updateSettings(TextView mDateView, TextView mClockView,
-            ModLockscreenClockSettingsGen dao) {
-        if (dao.masterModLockscreenClockEnable) { // モジュール有効の場合
+            ModNotificationExpandedClockSettingsGen dao) {
+        if (dao.masterModNotificationExpandedClockEnable) { // モジュール有効の場合
             // 時計の文字サイズ、色、フォント、フォーマットをセット
             mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
-                    dao.lockscreenClockTimeTextSize / 100f
+                    dao.notificationExpandedClockTimeTextSize / 100f
                             * dao.defaultTimeTextSize);
-            mClockView.setTextColor(dao.lockscreenClockTimeTextColor);
+            mClockView.setTextColor(dao.notificationExpandedClockTimeTextColor);
             Typeface timeTypeface = FontListPreference.makeTypeface(
                     dao.moduleResources.getAssets(),
-                    dao.lockscreenClockTimeTypefaceKbn,
-                    dao.lockscreenClockTimeTypefaceName,
-                    dao.lockscreenClockTimeTypefaceStyle);
+                    dao.notificationExpandedClockTimeTypefaceKbn,
+                    dao.notificationExpandedClockTimeTypefaceName,
+                    dao.notificationExpandedClockTimeTypefaceStyle);
+            XLog.d(ModNotificationExpandedClock.class.getSimpleName(),
+                    String.format("%s %s %s", dao.notificationExpandedClockTimeTypefaceKbn,
+                            dao.notificationExpandedClockTimeTypefaceName,
+                            dao.notificationExpandedClockTimeTypefaceStyle));
+            XLog.d(ModNotificationExpandedClock.class.getSimpleName(), "timeTypeface:"
+                    + timeTypeface);
             mClockView.setTypeface(timeTypeface);
             SimpleDateFormat timeFormat = new SimpleDateFormat(
-                    dao.lockscreenClockTimeFormat,
-                    dao.lockscreenClockTimeForceEnglish ? Locale.ENGLISH
+                    dao.notificationExpandedClockTimeFormat,
+                    dao.notificationExpandedClockTimeForceEnglish ? Locale.ENGLISH
                             : Locale.getDefault());
             XposedHelpers.setAdditionalInstanceField(mClockView,
                     ADDITIONAL_FORMAT, timeFormat);
 
             // 日付の文字サイズ、色、フォント、フォーマットをセット
             mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
-                    dao.lockscreenClockDateTextSize / 100f
+                    dao.notificationExpandedClockDateTextSize / 100f
                             * dao.defaultDateTextSize);
-            mDateView.setTextColor(dao.lockscreenClockDateTextColor);
+            mDateView.setTextColor(dao.notificationExpandedClockDateTextColor);
             Typeface dateTypeface = FontListPreference.makeTypeface(
                     dao.moduleResources.getAssets(),
-                    dao.lockscreenClockDateTypefaceKbn,
-                    dao.lockscreenClockDateTypefaceName,
-                    dao.lockscreenClockDateTypefaceStyle);
+                    dao.notificationExpandedClockDateTypefaceKbn,
+                    dao.notificationExpandedClockDateTypefaceName,
+                    dao.notificationExpandedClockDateTypefaceStyle);
             mDateView.setTypeface(dateTypeface);
             SimpleDateFormat dateFormat = new SimpleDateFormat(
-                    dao.lockscreenClockDateFormat,
-                    dao.lockscreenClockDateForceEnglish ? Locale.ENGLISH
+                    dao.notificationExpandedClockDateFormat,
+                    dao.notificationExpandedClockDateForceEnglish ? Locale.ENGLISH
                             : Locale.getDefault());
             XposedHelpers.setAdditionalInstanceField(mDateView,
                     ADDITIONAL_FORMAT, dateFormat);
@@ -276,28 +296,29 @@ public class ModLockscreenClock extends AbstractXposedModule implements
     /**
      * 設定変更を受け取るレシーバー.
      */
-    public static class ModLockscreenClockSettingChangedReceiver extends
+    public static class ModNotificationExpandedClockSettingChangedReceiver extends
             SettingChangedReceiver {
 
+        private WeakReference<TextView> mClockView;
         private WeakReference<TextView> mDateView;
 
-        protected ModLockscreenClockSettingChangedReceiver(TextView mDateView,
-                TextView mClockView, ModLockscreenClockSettingsGen dataObject,
+        protected ModNotificationExpandedClockSettingChangedReceiver(TextView mDateView,
+                TextView mClockView, ModNotificationExpandedClockSettingsGen dataObject,
                 String action) {
-            super(mClockView, dataObject, action);
+            super(dataObject, action);
             this.mDateView = new WeakReference<TextView>(mDateView);
+            this.mClockView = new WeakReference<TextView>(mClockView);
         }
 
         @Override
         protected void onDataChanged() {
-            Object thisObj = thisObject.get();
             TextView mDateView = this.mDateView.get();
+            TextView mClockView = this.mClockView.get();
             Object dao = this.dataObject.get();
-            if (isNotNull(thisObj, mDateView, dao)) {
-                TextView mClockView = (TextView) thisObj;
+            if (isNotNull(mClockView, mDateView, dao)) {
                 // 設定を反映し、表示を更新
                 updateSettings(mDateView, mClockView,
-                        (ModLockscreenClockSettingsGen) dao);
+                        (ModNotificationExpandedClockSettingsGen) dao);
                 update(mDateView, mClockView);
             }
         }

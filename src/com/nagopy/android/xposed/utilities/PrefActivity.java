@@ -145,6 +145,17 @@ public class PrefActivity extends PreferenceActivity implements OnSharedPreferen
             case R.string.title_lockscreen_clock_time_force_english:
                 intent.setAction(Const.ACTION_LOCKSCREEN_CLOCK_SETTING_CHANGED);
                 break;
+            case R.string.title_master_mod_notification_expanded_clock_enable:
+            case R.string.title_notification_expanded_clock_date_format:
+            case R.string.title_notification_expanded_clock_date_text_color:
+            case R.string.title_notification_expanded_clock_date_text_size:
+            case R.string.title_notification_expanded_clock_date_force_english:
+            case R.string.title_notification_expanded_clock_time_format:
+            case R.string.title_notification_expanded_clock_time_text_color:
+            case R.string.title_notification_expanded_clock_time_text_size:
+            case R.string.title_notification_expanded_clock_time_force_english:
+                intent.setAction(Const.ACTION_NOTIFICATION_EXPANDED_CLOCK_SETTING_CHANGED);
+                break;
             case R.string.ga_dllow_anonymous_usage_reports:
                 // OptOut
                 GoogleAnalytics.getInstance(getApplicationContext()).setAppOptOut(
@@ -158,6 +169,10 @@ public class PrefActivity extends PreferenceActivity implements OnSharedPreferen
         if (key.startsWith("lockscreen_clock_date_typeface")
                 || key.startsWith("lockscreen_clock_time_typeface")) {
             intent.setAction(Const.ACTION_LOCKSCREEN_CLOCK_SETTING_CHANGED);
+        }
+        if (key.startsWith("notification_expanded_clock_date_typeface")
+                || key.startsWith("notification_expanded_clock_time_typeface")) {
+            intent.setAction(Const.ACTION_NOTIFICATION_EXPANDED_CLOCK_SETTING_CHANGED);
         }
 
         if (intent.getAction() != null) {
