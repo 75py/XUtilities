@@ -38,8 +38,15 @@ public abstract class SettingChangedReceiver extends BroadcastReceiver {
     /** 設定保存オブジェクト */
     public final WeakReference<Object> dataObject;
     /** 対象オブジェクト */
-    public final WeakReference<Object> thisObject;
+    @Deprecated
+    public WeakReference<Object> thisObject;
 
+    protected SettingChangedReceiver(Object dataObject, String action) {
+        this.dataObject = new WeakReference<Object>(dataObject);
+        this.action = action;
+    }
+
+    @Deprecated
     protected SettingChangedReceiver(Object thisObject, Object dataObject, String action) {
         this.thisObject = new WeakReference<Object>(thisObject);
         this.dataObject = new WeakReference<Object>(dataObject);
@@ -57,6 +64,7 @@ public abstract class SettingChangedReceiver extends BroadcastReceiver {
         Object obj = dataObject.get();
         XLog.d(getClass().getSimpleName(), obj);
         if (!StringUtils.equals(intent.getAction(), action) || obj == null) {
+            context.unregisterReceiver(this);
             return;
         }
 

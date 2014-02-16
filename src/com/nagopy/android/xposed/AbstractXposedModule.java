@@ -21,9 +21,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
-
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.Intent;
+import android.os.UserHandle;
+import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.xposed.util.XLog;
-
 import de.robv.android.xposed.XposedHelpers;
 
 /**
@@ -73,6 +76,25 @@ public abstract class AbstractXposedModule {
      */
     protected void log(Object obj) {
         XLog.d(this.getClass().getSimpleName(), obj);
+    }
+
+    protected Object getObjectField(Object obj, String fieldName) {
+        return XposedHelpers.getObjectField(obj, fieldName);
+    }
+
+    /**
+     * @param context
+     * @param intent
+     */
+    @SuppressLint("NewApi")
+    protected void sendBroadcast(Context context, Intent intent) {
+        if (VersionUtil.isJBmr1OrLater()) {
+            UserHandle userAll = (UserHandle) XposedHelpers.getStaticObjectField(
+                    UserHandle.class, "ALL");
+            context.sendBroadcastAsUser(intent, userAll);
+        } else {
+            context.sendBroadcast(intent);
+        }
     }
 
 }
