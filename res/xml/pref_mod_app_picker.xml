@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    android:enabled="@bool/is_kitkat_or_later"
     android:title="@string/title_preference_screen_app_picker" >
 
     <com.nagopy.android.common.pref.TextPreference text="@string/header_app_picker" />

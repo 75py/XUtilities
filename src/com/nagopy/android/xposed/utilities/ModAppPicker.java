@@ -37,9 +37,9 @@ import android.widget.CheckBox;
 import android.widget.GridView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
-import android.widget.ListView;
 
 import com.nagopy.android.common.util.DimenUtil;
+import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.utilities.setting.AlwaysUsePerAppsList.PerAppsSetting;
 import com.nagopy.android.xposed.utilities.setting.ModAppPickerSettingsGen;
@@ -149,10 +149,11 @@ public class ModAppPicker extends AbstractXposedModule implements IXposedHookZyg
                         viewHolder.mButtonLayout = buttonBar;
                         View mAbsListView = liparam.view.findViewById(id_resolver);
                         mAbsListView.setTag(R.id.tag_app_picker_view_holder, viewHolder);
+                        log(viewHolder);
                     }
                 });
 
-        Class<?> clsResolverActivity = XposedHelpers.findClass(
+        final Class<?> clsResolverActivity = XposedHelpers.findClass(
                 "com.android.internal.app.ResolverActivity", null);
 
         // onIntentSelected
@@ -178,12 +179,13 @@ public class ModAppPicker extends AbstractXposedModule implements IXposedHookZyg
                         mAbsListView.setOnItemClickListener(new OnItemClickListener() {
                             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
-                                final int checkedPos = mAbsListView.getCheckedItemPosition();
+                                final int checkedPos = VersionUtil.isKitKatOrLator() ? mAbsListView
+                                        .getCheckedItemPosition() : position;
                                 final boolean enabled = checkedPos != GridView.INVALID_POSITION;
+                                log("onItemClick:" + checkedPos + ", " + enabled);
                                 if (enabled) {
                                     XposedHelpers.callMethod(param.thisObject,
-                                            "startSelected", position,
-                                            mAlwaysCheckBox.isChecked());
+                                            "startSelected", position, mAlwaysCheckBox.isChecked());
                                 }
                             }
                         });
@@ -257,21 +259,23 @@ public class ModAppPicker extends AbstractXposedModule implements IXposedHookZyg
 
                         PerAppsSetting launchApp = mSettings.alwaysUsePerApps.findByAction(
                                 launchedFromPkg, paramIntent.getAction());
+                        log(launchApp);
                         if (launchApp != null) {
-                            ListView mListView = (ListView) getObjectField(param.thisObject,
-                                    "mListView");
-                            ListAdapter adapter = mListView.getAdapter();
+                            AbsListView absListView = (AbsListView) getAbsListView(param.thisObject);
+                            ListAdapter adapter = absListView.getAdapter();
+                            List<?> mList = (List<?>) XposedHelpers
+                                    .getObjectField(adapter, "mList");
                             int childCount = adapter.getCount();
                             log("childCount:" + childCount);
                             for (int i = 0; i < childCount; i++) {
-                                Object item = adapter.getItem(i);
+                                Object item = mList.get(i);
                                 ResolveInfo ri = (ResolveInfo) getObjectField(item, "ri");
                                 if (TextUtils.equals(ri.activityInfo.packageName,
                                         launchApp.targetPackageName)
                                         && TextUtils.equals(ri.activityInfo.name,
                                                 launchApp.targetActivityName)) {
                                     log("launch!! :" + ri);
-                                    mListView.setItemChecked(i, true);
+                                    absListView.setItemChecked(i, true);
                                     XposedHelpers.callMethod(param.thisObject, "startSelected", i,
                                             false);
                                     break;
@@ -344,12 +348,17 @@ public class ModAppPicker extends AbstractXposedModule implements IXposedHookZyg
     }
 
     private static class ViewHolder {
-        @SuppressWarnings("unused")
         LinearLayout mButtonLayout;
-        @SuppressWarnings("unused")
         View mAlwaysButton;
-        @SuppressWarnings("unused")
         View mOnceButton;
         CheckBox mAlwaysCheckBox;
+
+        @Override
+        public String toString() {
+            return "ViewHolder [mButtonLayout=" + mButtonLayout + ", mAlwaysButton="
+                    + mAlwaysButton + ", mOnceButton=" + mOnceButton + ", mAlwaysCheckBox="
+                    + mAlwaysCheckBox + "]";
+        }
+
     }
 }
