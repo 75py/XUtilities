@@ -72,10 +72,16 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
             return;
         }
 
-        if (!mSettings.masterModNotificationExpandedClockEnable) {
-            // モジュールが無効なら何もしない
+        if (!VersionUtil.isJBmr1OrLater()) {
+            // 4.2未満の場合は何もしない
             return;
         }
+
+        // マスタも随時反映の対象なので、無効であっても処理は続行する
+        // if (!mSettings.masterModNotificationExpandedClockEnable) {
+        // // モジュールが無効なら何もしない
+        // return;
+        // }
 
         modulePath = startupParam.modulePath;
     }
@@ -86,10 +92,16 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
             return;
         }
 
-        if (!mSettings.masterModNotificationExpandedClockEnable) {
-            // モジュールが無効なら何もしない
+        if (!VersionUtil.isJBmr1OrLater()) {
+            // 4.2未満の場合は何もしない
             return;
         }
+
+        // マスタも随時反映の対象なので、無効であっても処理は続行する
+        // if (!mSettings.masterModNotificationExpandedClockEnable) {
+        // // モジュールが無効なら何もしない
+        // return;
+        // }
 
         // Clockのクラスを取得
         final Class<?> clockClass = XposedHelpers.findClass(
