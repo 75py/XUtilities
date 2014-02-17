@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 75py
+ * Copyright (C) 2014 75py
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ import de.robv.android.xposed.callbacks.XC_LayoutInflated;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 
 /**
- * ロックスクリーンの時計をカスタマイズするモジュール.
+ * 通知ヘッダーの時計をカスタマイズするモジュール.
  */
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
 public class ModNotificationExpandedClock extends AbstractXposedModule implements
@@ -72,11 +72,12 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
             return;
         }
 
-        log("initZygote");
+        if (!mSettings.masterModNotificationExpandedClockEnable) {
+            // モジュールが無効なら何もしない
+            return;
+        }
 
         modulePath = startupParam.modulePath;
-
-        log("initZygote end");
     }
 
     @Override
@@ -85,10 +86,14 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
             return;
         }
 
+        if (!mSettings.masterModNotificationExpandedClockEnable) {
+            // モジュールが無効なら何もしない
+            return;
+        }
+
         // Clockのクラスを取得
         final Class<?> clockClass = XposedHelpers.findClass(
-                "com.android.systemui.statusbar.policy.Clock",
-                lpparam.classLoader);
+                "com.android.systemui.statusbar.policy.Clock", lpparam.classLoader);
 
         // 時計の文字を返すメソッドを書き換え
         XposedHelpers.findAndHookMethod(clockClass, "getSmallTime",
@@ -113,10 +118,9 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
                     }
                 });
 
+        // 日付フォーマットを反映できるようごにょごにょ
         Class<?> clsDateView = XposedHelpers.findClass(
-                "com.android.systemui.statusbar.policy.DateView",
-                lpparam.classLoader);
-        // updateClock
+                "com.android.systemui.statusbar.policy.DateView", lpparam.classLoader);
         XposedHelpers.findAndHookMethod(clsDateView, "updateClock", new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
@@ -141,14 +145,19 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
     }
 
     @Override
-    public void handleInitPackageResources(
-            final InitPackageResourcesParam resparam) throws Throwable {
+    public void handleInitPackageResources(final InitPackageResourcesParam resparam)
+            throws Throwable {
         if (!XUtil.isSystemUi(resparam)) {
+            // システムUI以外では何もしない
             return;
         }
         if (!VersionUtil.isJBmr1OrLater()) {
             // 4.2未満では何もしない
-            log("handleLoadPackage. do nothing.");
+            return;
+        }
+
+        if (!mSettings.masterModNotificationExpandedClockEnable) {
+            // モジュールが無効なら何もしない
             return;
         }
 
@@ -183,13 +192,12 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
                         mSettings.defaultDateTypeface = mDateView
                                 .getTypeface();
 
-                        // モジュールリソース取得用の値をDaoに追加
+                        // モジュールリソース取得用の値を保存
                         mSettings.moduleResources = XModuleResources
                                 .createInstance(modulePath, resparam.res);
 
                         // モジュールの設定を保存
-                        updateSettings(mDateView, mClockView,
-                                mSettings);
+                        updateSettings(mDateView, mClockView, mSettings);
                         // 時計を更新
                         update(mDateView, mClockView);
 
@@ -201,7 +209,6 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
                                         Const.ACTION_NOTIFICATION_EXPANDED_CLOCK_SETTING_CHANGED),
                                 new IntentFilter(
                                         Const.ACTION_NOTIFICATION_EXPANDED_CLOCK_SETTING_CHANGED));
-
                     }
                 });
     }
@@ -231,63 +238,65 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
      * @param clockModDao {@link GenModStatusBarClockDao}
      */
     private static void updateSettings(TextView mDateView, TextView mClockView,
-            ModNotificationExpandedClockSettingsGen dao) {
-        if (dao.masterModNotificationExpandedClockEnable) { // モジュール有効の場合
+            ModNotificationExpandedClockSettingsGen setting) {
+        if (setting.masterModNotificationExpandedClockEnable) {
+            // モジュール有効の場合
             // 時計の文字サイズ、色、フォント、フォーマットをセット
             mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
-                    dao.notificationExpandedClockTimeTextSize / 100f
-                            * dao.defaultTimeTextSize);
-            mClockView.setTextColor(dao.notificationExpandedClockTimeTextColor);
+                    setting.notificationExpandedClockTimeTextSize / 100f
+                            * setting.defaultTimeTextSize);
+            mClockView.setTextColor(setting.notificationExpandedClockTimeTextColor);
             Typeface timeTypeface = FontListPreference.makeTypeface(
-                    dao.moduleResources.getAssets(),
-                    dao.notificationExpandedClockTimeTypefaceKbn,
-                    dao.notificationExpandedClockTimeTypefaceName,
-                    dao.notificationExpandedClockTimeTypefaceStyle);
+                    setting.moduleResources.getAssets(),
+                    setting.notificationExpandedClockTimeTypefaceKbn,
+                    setting.notificationExpandedClockTimeTypefaceName,
+                    setting.notificationExpandedClockTimeTypefaceStyle);
             XLog.d(ModNotificationExpandedClock.class.getSimpleName(),
-                    String.format("%s %s %s", dao.notificationExpandedClockTimeTypefaceKbn,
-                            dao.notificationExpandedClockTimeTypefaceName,
-                            dao.notificationExpandedClockTimeTypefaceStyle));
+                    String.format("%s %s %s", setting.notificationExpandedClockTimeTypefaceKbn,
+                            setting.notificationExpandedClockTimeTypefaceName,
+                            setting.notificationExpandedClockTimeTypefaceStyle));
             XLog.d(ModNotificationExpandedClock.class.getSimpleName(), "timeTypeface:"
                     + timeTypeface);
             mClockView.setTypeface(timeTypeface);
             SimpleDateFormat timeFormat = new SimpleDateFormat(
-                    dao.notificationExpandedClockTimeFormat,
-                    dao.notificationExpandedClockTimeForceEnglish ? Locale.ENGLISH
+                    setting.notificationExpandedClockTimeFormat,
+                    setting.notificationExpandedClockTimeForceEnglish ? Locale.ENGLISH
                             : Locale.getDefault());
             XposedHelpers.setAdditionalInstanceField(mClockView,
                     ADDITIONAL_FORMAT, timeFormat);
 
             // 日付の文字サイズ、色、フォント、フォーマットをセット
             mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
-                    dao.notificationExpandedClockDateTextSize / 100f
-                            * dao.defaultDateTextSize);
-            mDateView.setTextColor(dao.notificationExpandedClockDateTextColor);
+                    setting.notificationExpandedClockDateTextSize / 100f
+                            * setting.defaultDateTextSize);
+            mDateView.setTextColor(setting.notificationExpandedClockDateTextColor);
             Typeface dateTypeface = FontListPreference.makeTypeface(
-                    dao.moduleResources.getAssets(),
-                    dao.notificationExpandedClockDateTypefaceKbn,
-                    dao.notificationExpandedClockDateTypefaceName,
-                    dao.notificationExpandedClockDateTypefaceStyle);
+                    setting.moduleResources.getAssets(),
+                    setting.notificationExpandedClockDateTypefaceKbn,
+                    setting.notificationExpandedClockDateTypefaceName,
+                    setting.notificationExpandedClockDateTypefaceStyle);
             mDateView.setTypeface(dateTypeface);
             SimpleDateFormat dateFormat = new SimpleDateFormat(
-                    dao.notificationExpandedClockDateFormat,
-                    dao.notificationExpandedClockDateForceEnglish ? Locale.ENGLISH
+                    setting.notificationExpandedClockDateFormat,
+                    setting.notificationExpandedClockDateForceEnglish ? Locale.ENGLISH
                             : Locale.getDefault());
             XposedHelpers.setAdditionalInstanceField(mDateView,
                     ADDITIONAL_FORMAT, dateFormat);
-        } else { // モジュール無効の場合
+        } else {
+            // モジュール無効の場合
             // 時計のデフォルト設定を反映
             mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
-                    dao.defaultTimeTextSize);
-            mClockView.setTextColor(dao.defaultTimeTextColor);
-            mClockView.setTypeface(dao.defaultTimeTypeface);
+                    setting.defaultTimeTextSize);
+            mClockView.setTextColor(setting.defaultTimeTextColor);
+            mClockView.setTypeface(setting.defaultTimeTypeface);
             XposedHelpers.removeAdditionalInstanceField(mClockView,
                     ADDITIONAL_FORMAT);
 
             // 日付のデフォルト設定を反映
             mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
-                    dao.defaultDateTextSize);
-            mDateView.setTextColor(dao.defaultDateTextColor);
-            mDateView.setTypeface(dao.defaultDateTypeface);
+                    setting.defaultDateTextSize);
+            mDateView.setTextColor(setting.defaultDateTextColor);
+            mDateView.setTypeface(setting.defaultDateTypeface);
             XposedHelpers.removeAdditionalInstanceField(mDateView,
                     ADDITIONAL_FORMAT);
         }
@@ -314,11 +323,11 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
         protected void onDataChanged() {
             TextView mDateView = this.mDateView.get();
             TextView mClockView = this.mClockView.get();
-            Object dao = this.dataObject.get();
-            if (isNotNull(mClockView, mDateView, dao)) {
+            Object setting = this.dataObject.get();
+            if (isNotNull(mClockView, mDateView, setting)) {
                 // 設定を反映し、表示を更新
                 updateSettings(mDateView, mClockView,
-                        (ModNotificationExpandedClockSettingsGen) dao);
+                        (ModNotificationExpandedClockSettingsGen) setting);
                 update(mDateView, mClockView);
             }
         }
