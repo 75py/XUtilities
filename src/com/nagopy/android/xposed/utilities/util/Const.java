@@ -51,4 +51,8 @@ public class Const {
     public static final String EXTRA_TARGET_ACTIVITY_NAME = "com.nagopy.android.xposed.utilities.EXTRA_TARGET_ACTIVITY_NAME";
     public static final String EXTRA_TARGET_ACTION = "com.nagopy.android.xposed.utilities.EXTRA_TARGET_ACTION";
     public static final String ACTION_APP_PICKER_SETTING_CHANGED = "com.nagopy.android.xposed.utilities.ACTION_APP_PICKER_SETTING_CHANGED";
+    public static final String ACTION_NOTIFICATION_EXPANDED_CLOCK_SETTING_CHANGED = "com.nagopy.android.xposed.utilities.ACTION_NOTIFICATION_EXPANDED_CLOCK_SETTING_CHANGED";
+
+    public static final String ADDITIONAL_DATE_FORMAT = "ADDITIONAL_DATE_FORMAT";
+
 }

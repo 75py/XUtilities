@@ -1,0 +1,24 @@
+<resources>
+
+    <!-- header -->
+    <string name="header_notification_expanded_clock">While this module is enabled, the changes will be applied immediately.</string>
+
+    <!-- category -->
+    <string name="category_date">Date</string>
+    <string name="category_time">Time</string>
+
+    <!-- lockscreen clock -->
+    <string name="title_preference_screen_notification_expanded_clock">Notification expanded clock</string>
+    <string name="title_master_mod_notification_expanded_clock_enable">Enable ModNotificationExpandedClock</string>
+    <string name="title_notification_expanded_clock_date_text_size">Text size</string>
+    <string name="title_notification_expanded_clock_date_text_color">Text color</string>
+    <string name="title_notification_expanded_clock_date_format">Format</string>
+    <string name="title_notification_expanded_clock_date_force_english">Force English</string>
+    <string name="title_notification_expanded_clock_time_text_size">Text size</string>
+    <string name="title_notification_expanded_clock_time_text_color">Text color</string>
+    <string name="title_notification_expanded_clock_time_format">Format</string>
+    <string name="title_notification_expanded_clock_time_force_english">Force English</string>
+    <string name="title_notification_expanded_clock_date_typeface">Font</string>
+    <string name="title_notification_expanded_clock_time_typeface">Font</string>
+
+</resources>

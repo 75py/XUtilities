@@ -54,7 +54,7 @@ import de.robv.android.xposed.callbacks.XC_LayoutInflated;
 public class ModLockscreenClock extends AbstractXposedModule implements
         IXposedHookZygoteInit, IXposedHookInitPackageResources {
 
-    private static final String ADDITIONAL_FORMAT = "modLockscreenClockFormat";
+    private static final String ADDITIONAL_FORMAT = Const.ADDITIONAL_DATE_FORMAT;
 
     private String modulePath;
 

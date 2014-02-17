@@ -61,7 +61,7 @@ public class ModStatusBarClock extends AbstractXposedModule implements
         IXposedHookZygoteInit, IXposedHookLoadPackage,
         IXposedHookInitPackageResources {
 
-    private static final String ADDITIONAL_FIELD_FORMAT = "modStatusBarClockFormat";
+    private static final String ADDITIONAL_FIELD_FORMAT = Const.ADDITIONAL_DATE_FORMAT;
 
     @XResource
     private ModStatusBarClockSettingsGen mStatusBarClockSettings;
