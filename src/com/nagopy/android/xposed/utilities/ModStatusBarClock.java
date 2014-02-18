@@ -16,6 +16,7 @@
 
 package com.nagopy.android.xposed.utilities;
 
+import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
@@ -181,7 +182,9 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                 ViewHolder viewHolder = (ViewHolder) clockView
                         .getTag(R.id.tag_status_bar_clock_view_holder);
                 Animation anim = viewHolder.mStatusBarContents.getAnimation();
-                clockView.startAnimation(anim);
+                if (anim != null) {
+                    clockView.startAnimation(anim);
+                }
             }
         });
 
@@ -264,22 +267,22 @@ public class ModStatusBarClock extends AbstractXposedModule implements
     private static class StatusBarClockSettingChangedReceiver extends
             com.nagopy.android.xposed.SettingChangedReceiver {
 
+        private WeakReference<TextView> mClockView;
+
         public StatusBarClockSettingChangedReceiver(TextView clock,
-                ModStatusBarClockSettingsGen clockModDao) {
-            super(clock, clockModDao,
-                    Const.ACTION_STATUS_BAR_CLOCK_SETTING_CHANGED);
+                ModStatusBarClockSettingsGen settings) {
+            super(settings, Const.ACTION_STATUS_BAR_CLOCK_SETTING_CHANGED);
+            mClockView = new WeakReference<TextView>(clock);
         }
 
         @Override
         protected void onDataChanged() {
-            Object thisObj = thisObject.get();
+            TextView clockView = mClockView.get();
             Object dataObj = dataObject.get();
-            if (isNotNull(dataObj, thisObj)) {
+            if (isNotNull(dataObj, clockView)) {
                 // 設定変更反映、表示更新
-                TextView clockTextView = (TextView) thisObj;
-                updateSettings(clockTextView,
-                        (ModStatusBarClockSettingsGen) dataObj);
-                updateClock(clockTextView);
+                updateSettings(clockView, (ModStatusBarClockSettingsGen) dataObj);
+                updateClock(clockView);
             }
         }
 
