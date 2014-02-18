@@ -1,12 +1,1 @@
-com.nagopy.android.xposed.utilities.ModBrightness
-com.nagopy.android.xposed.utilities.ModStatusBarClock
-com.nagopy.android.xposed.utilities.ModLockscreenClock
-com.nagopy.android.xposed.utilities.ModLockscreenTorch
-com.nagopy.android.xposed.utilities.ModNotification
-com.nagopy.android.xposed.utilities.ModOtherUtilities
-com.nagopy.android.xposed.utilities.ModToast
-com.nagopy.android.xposed.utilities.ModBatteryIcon
-com.nagopy.android.xposed.utilities.ModImmersiveFullScreenMode
-com.nagopy.android.xposed.utilities.ModActionBar
-com.nagopy.android.xposed.utilities.ModAppPicker
-com.nagopy.android.xposed.utilities.ModNotificationExpandedClock
+com.nagopy.android.xposed.utilities.XposedModules

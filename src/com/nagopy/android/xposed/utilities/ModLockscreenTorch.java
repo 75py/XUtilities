@@ -26,9 +26,10 @@ import android.view.View.OnTouchListener;
 import android.widget.TextClock;
 
 import com.nagopy.android.common.util.GestureUtil;
-import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XLog;
+import com.nagopy.android.xposed.utilities.XposedModules.XMinSdkVersion;
+import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
 import com.nagopy.android.xposed.utilities.service.TorchService;
 import com.nagopy.android.xposed.utilities.setting.ModLockscreenTorchSettingsGen;
 
@@ -40,6 +41,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 /**
  * ロックスクリーンでライトを点灯させるためのモジュール.
  */
+@XMinSdkVersion(Build.VERSION_CODES.JELLY_BEAN_MR1)
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
 public class ModLockscreenTorch extends AbstractXposedModule implements IXposedHookLoadPackage {
 
@@ -49,26 +51,13 @@ public class ModLockscreenTorch extends AbstractXposedModule implements IXposedH
     /** キーガードのパッケージ名 */
     private static final String PACKAGE_KEYGUARD = "com.android.keyguard";
 
+    @XTargetPackage(PACKAGE_KEYGUARD)
     @Override
     public void handleLoadPackage(final LoadPackageParam lpparam) throws Throwable {
-        if (!lpparam.packageName.equals(PACKAGE_KEYGUARD)) {
-            // キーガード以外では何もしない
-            return;
-        }
-
-        if (!VersionUtil.isJBmr1OrLater()) {
-            // 4.2未満では何もしない
-            log("handleLoadPackage. do nothing." + Build.VERSION.SDK_INT);
-            return;
-        }
-
         if (!mLockscreenTorchSettings.masterModLockscreenTorchEnable) {
             // モジュールが無効の場合は何もしない
-            log("handleLoadPackage. do nothing.");
             return;
         }
-
-        log("handleLoadPackage target:" + lpparam.packageName);
 
         // KeyguardStatusViewのクラスを取得
         Class<?> clsKeyguardStatusView = XposedHelpers.findClass(
@@ -94,8 +83,6 @@ public class ModLockscreenTorch extends AbstractXposedModule implements IXposedH
                         mClockView.setOnTouchListener(onTouchListener);
                     }
                 });
-
-        log("handleLoadPackage end");
     }
 
     private static class ClockTapTorchListener extends SimpleOnGestureListener {

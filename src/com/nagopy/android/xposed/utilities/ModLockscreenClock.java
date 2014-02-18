@@ -32,10 +32,11 @@ import android.widget.TextClock;
 import android.widget.TextView;
 
 import com.nagopy.android.common.pref.FontListPreference;
-import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.SettingChangedReceiver;
 import com.nagopy.android.xposed.util.XUtil;
+import com.nagopy.android.xposed.utilities.XposedModules.XMinSdkVersion;
+import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
 import com.nagopy.android.xposed.utilities.setting.ModLockscreenClockSettingsGen;
 import com.nagopy.android.xposed.utilities.util.Const;
 
@@ -50,6 +51,7 @@ import de.robv.android.xposed.callbacks.XC_LayoutInflated;
 /**
  * ロックスクリーンの時計をカスタマイズするモジュール.
  */
+@XMinSdkVersion(Build.VERSION_CODES.JELLY_BEAN_MR1)
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
 public class ModLockscreenClock extends AbstractXposedModule implements
         IXposedHookZygoteInit, IXposedHookInitPackageResources {
@@ -66,18 +68,11 @@ public class ModLockscreenClock extends AbstractXposedModule implements
 
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
-        if (!VersionUtil.isJBmr1OrLater()) {
-            // 4.2未満の場合は何もしない
-            return;
-        }
-
         // マスタも随時反映の対象なので、無効であっても処理は続行する
         // if (!mSettings.masterModLockscreenClockEnable) {
         // // モジュールが無効になっている場合は何もしない
         // return;
         // }
-
-        log("initZygote");
 
         modulePath = startupParam.modulePath;
 
@@ -127,23 +122,12 @@ public class ModLockscreenClock extends AbstractXposedModule implements
                         }
                     }
                 });
-
-        log("initZygote end");
     }
 
+    @XTargetPackage(PACKAGE_KEYGUARD)
     @Override
     public void handleInitPackageResources(
             final InitPackageResourcesParam resparam) throws Throwable {
-        if (!resparam.packageName.equals(PACKAGE_KEYGUARD)) {
-            // キーガード以外では何もしない
-            return;
-        }
-
-        if (!VersionUtil.isJBmr1OrLater()) {
-            // 4.2未満の場合は何もしない
-            return;
-        }
-
         // マスタも随時反映の対象なので、無効であっても処理は続行する
         // if (!mSettings.masterModLockscreenClockEnable) {
         // // モジュールが無効になっている場合は何もしない

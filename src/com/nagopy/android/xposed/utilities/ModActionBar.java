@@ -17,11 +17,12 @@
 package com.nagopy.android.xposed.utilities;
 
 import android.content.Context;
+import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup.MarginLayoutParams;
 
-import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
+import com.nagopy.android.xposed.utilities.XposedModules.XMinSdkVersion;
 import com.nagopy.android.xposed.utilities.setting.ModActionBarSettingsGen;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
@@ -31,6 +32,7 @@ import de.robv.android.xposed.XposedHelpers;
 /**
  * アクションバーを下に移動するモジュール.
  */
+@XMinSdkVersion(Build.VERSION_CODES.KITKAT)
 public class ModActionBar extends AbstractXposedModule implements IXposedHookZygoteInit {
 
     @XResource
@@ -40,13 +42,7 @@ public class ModActionBar extends AbstractXposedModule implements IXposedHookZyg
     public void initZygote(StartupParam startupParam) throws Throwable {
         if (!mSettings.masterModActionBarEnable) {
             // 無効になっている場合は何もしない
-            log("do nothing.");
             return;
-        }
-
-        if (!VersionUtil.isKitKatOrLator()) {
-            // 4.4未満の場合は何もしない
-            log("do nothing(version)");
         }
 
         if (mSettings.actionBarBottomEnable) {

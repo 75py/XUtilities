@@ -23,8 +23,10 @@ import android.view.KeyEvent;
 
 import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
+import com.nagopy.android.xposed.util.XConst;
 import com.nagopy.android.xposed.util.XLog;
 import com.nagopy.android.xposed.util.XUtil;
+import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
 import com.nagopy.android.xposed.utilities.setting.ModOtherUtilitiesSettingsGen;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
@@ -44,7 +46,6 @@ public class ModOtherUtilities extends AbstractXposedModule implements IXposedHo
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
         if (!mOtherUtilitiesSettings.masterModOtherUtilitiesEnable) {
-            XLog.d(getClass().getSimpleName(), "initZygote, do nothing.");
             return;
         }
 
@@ -90,16 +91,11 @@ public class ModOtherUtilities extends AbstractXposedModule implements IXposedHo
                         }
                     });
         }
-
-        XLog.d(getClass().getSimpleName() + " mission complete!");
     }
 
+    @XTargetPackage(XConst.PKG_SYSTEM_UI)
     @Override
     public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
-        if (!XUtil.isSystemUi(lpparam)) {
-            return;
-        }
-
         if (!mOtherUtilitiesSettings.masterModOtherUtilitiesEnable) {
             XLog.d(getClass().getSimpleName(), "handleLoadPackage, do nothing.");
             return;

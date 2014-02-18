@@ -149,7 +149,6 @@ public class ModAppPicker extends AbstractXposedModule implements IXposedHookZyg
                         viewHolder.mButtonLayout = buttonBar;
                         View mAbsListView = liparam.view.findViewById(id_resolver);
                         mAbsListView.setTag(R.id.tag_app_picker_view_holder, viewHolder);
-                        log(viewHolder);
                     }
                 });
 

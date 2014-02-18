@@ -26,8 +26,8 @@ import android.widget.LinearLayout;
 import com.nagopy.android.common.util.DimenUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XConst;
-import com.nagopy.android.xposed.util.XLog;
-import com.nagopy.android.xposed.util.XUtil;
+import com.nagopy.android.xposed.utilities.XposedModules.XMinSdkVersion;
+import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
 import com.nagopy.android.xposed.utilities.receiver.BatteryController;
 import com.nagopy.android.xposed.utilities.setting.ModBatteryIconSettingsGen;
 
@@ -43,6 +43,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 /**
  * ステータスバーのバッテリーアイコンをカスタマイズするモジュール.
  */
+@XMinSdkVersion(Build.VERSION_CODES.JELLY_BEAN_MR1)
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
 public class ModBatteryIcon extends AbstractXposedModule implements
         IXposedHookZygoteInit, IXposedHookLoadPackage,
@@ -60,19 +61,13 @@ public class ModBatteryIcon extends AbstractXposedModule implements
         modulePath = startupParam.modulePath;
     }
 
+    @XTargetPackage(XConst.PKG_SYSTEM_UI)
     @Override
     public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
-        if (!XUtil.isSystemUi(lpparam)) {
-            // システムUI以外では何もしない
-            return;
-        }
-
         if (!mBatteryIconSettings.masterModBatteryIconEnable) {
             // オフになっている場合は何もしない
             return;
         }
-
-        XLog.d(getClass().getSimpleName(), "handleLoadPackage");
 
         if (mBatteryIconSettings.useCircleBatteryIcon) {
             // バッテリーアイコン変更
@@ -98,20 +93,14 @@ public class ModBatteryIcon extends AbstractXposedModule implements
         }
     }
 
+    @XTargetPackage(XConst.PKG_SYSTEM_UI)
     @Override
     public void handleInitPackageResources(
             final InitPackageResourcesParam resparam) throws Throwable {
-        if (!XUtil.isSystemUi(resparam)) {
-            // システムUI以外では何もしない
-            return;
-        }
-
         if (!mBatteryIconSettings.masterModBatteryIconEnable) {
             // オフになっている場合は何もしない
             return;
         }
-
-        XLog.d(getClass().getSimpleName(), "handleInitPackageResources");
 
         if (mBatteryIconSettings.useCircleBatteryIcon) {
             // バッテリーアイコン変更
@@ -124,13 +113,13 @@ public class ModBatteryIcon extends AbstractXposedModule implements
                             LinearLayout ll = (LinearLayout) liparam.view
                                     .findViewById(liparam.res.getIdentifier(
                                             "signal_battery_cluster", "id", XConst.PKG_SYSTEM_UI));
-                            
+
                             // 元々のバッテリーアイコンを非表示にする
                             View batteryMeterView = liparam.view
                                     .findViewById(liparam.res.getIdentifier(
                                             "battery", "id", XConst.PKG_SYSTEM_UI));
                             batteryMeterView.setVisibility(View.GONE);
-                            
+
                             // アイコンのビューを作成
                             ImageView imageView = new ImageView(ll.getContext());
                             imageView.setId(BATTERY_VIEW_ID);

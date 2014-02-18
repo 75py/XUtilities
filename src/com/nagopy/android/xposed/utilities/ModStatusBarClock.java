@@ -37,8 +37,8 @@ import com.nagopy.android.common.pref.FontListPreference;
 import com.nagopy.android.common.util.DimenUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XConst;
-import com.nagopy.android.xposed.util.XLog;
 import com.nagopy.android.xposed.util.XUtil;
+import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
 import com.nagopy.android.xposed.utilities.setting.ModStatusBarClockSettingsGen;
 import com.nagopy.android.xposed.utilities.util.Const;
 
@@ -73,14 +73,9 @@ public class ModStatusBarClock extends AbstractXposedModule implements
         modulePath = startupParam.modulePath;
     }
 
+    @XTargetPackage(XConst.PKG_SYSTEM_UI)
     @Override
     public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
-        if (!XUtil.isSystemUi(lpparam)) {
-            // システムUI以外では何もしない
-            return;
-        }
-        XLog.d(getClass().getSimpleName(), "handleLoadPackage");
-
         // Clockのクラスを取得
         final Class<?> clockClass = XposedHelpers.findClass(
                 "com.android.systemui.statusbar.policy.Clock",
@@ -216,15 +211,10 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                 });
     }
 
+    @XTargetPackage(XConst.PKG_SYSTEM_UI)
     @Override
     public void handleInitPackageResources(
             final InitPackageResourcesParam resparam) throws Throwable {
-        if (!XUtil.isSystemUi(resparam)) {
-            // システムUI以外では何もしない
-            return;
-        }
-        XLog.d(getClass().getSimpleName(), "handleInitPackageResources");
-
         // レイアウトをごにょごにょ
         resparam.res.hookLayout(XConst.PKG_SYSTEM_UI, "layout",
                 "super_status_bar", new XC_LayoutInflated(-7575) { // 優先度低

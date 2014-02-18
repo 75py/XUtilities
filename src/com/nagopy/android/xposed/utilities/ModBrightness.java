@@ -22,7 +22,6 @@ import android.content.res.XResources;
 
 import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
-import com.nagopy.android.xposed.util.XLog;
 import com.nagopy.android.xposed.utilities.setting.ModBrightnessSettingsGen;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
@@ -35,7 +34,6 @@ public class ModBrightness extends AbstractXposedModule implements IXposedHookZy
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
         if (!mBrightnessSettings.masterModBrightnessEnable) {
-            XLog.d(getClass().getSimpleName() + " do nothing.");
             return;
         }
 
@@ -66,8 +64,6 @@ public class ModBrightness extends AbstractXposedModule implements IXposedHookZy
             XResources.setSystemWideReplacement("android", "bool",
                     "config_automatic_brightness_available", true);
         }
-
-        XLog.d(getClass().getSimpleName() + " mission complete!");
     }
 
     /**

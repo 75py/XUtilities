@@ -34,7 +34,6 @@ import com.nagopy.android.common.util.ImageUtil;
 import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.common.util.ViewUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
-import com.nagopy.android.xposed.util.XLog;
 import com.nagopy.android.xposed.util.XUtil;
 import com.nagopy.android.xposed.utilities.setting.ModToastSettingsGen;
 
@@ -55,7 +54,6 @@ public class ModToast extends AbstractXposedModule implements IXposedHookZygoteI
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
         if (!mToastSettings.masterModToastDaoEnable || !mToastSettings.setToastAboveLockscreen) {
-            XLog.d(getClass().getSimpleName() + " do nothing.");
             return;
         }
 
@@ -124,7 +122,6 @@ public class ModToast extends AbstractXposedModule implements IXposedHookZygoteI
         XposedHelpers.findAndHookMethod(Toast.class, "show", new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                log("show start");
                 View mNextView = (View) XposedHelpers.getObjectField(param.thisObject, "mNextView");
                 Context context = mNextView.getContext();
 
@@ -239,7 +236,5 @@ public class ModToast extends AbstractXposedModule implements IXposedHookZygoteI
                                 }
                             });
         }
-
-        log(getClass().getSimpleName() + " mission complete!");
     }
 }

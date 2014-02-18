@@ -21,12 +21,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.os.UserHandle;
+
 import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.xposed.util.XLog;
+
 import de.robv.android.xposed.XposedHelpers;
 
 /**
