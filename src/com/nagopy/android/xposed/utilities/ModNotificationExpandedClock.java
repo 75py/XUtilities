@@ -19,6 +19,7 @@ package com.nagopy.android.xposed.utilities;
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 
 import android.annotation.TargetApi;
@@ -32,6 +33,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.nagopy.android.common.pref.FontListPreference;
+import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.SettingChangedReceiver;
 import com.nagopy.android.xposed.util.XConst;
@@ -116,27 +118,51 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
         // 日付フォーマットを反映できるようごにょごにょ
         Class<?> clsDateView = XposedHelpers.findClass(
                 "com.android.systemui.statusbar.policy.DateView", lpparam.classLoader);
-        XposedHelpers.findAndHookMethod(clsDateView, "updateClock", new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                Object mDateFormat = XposedHelpers.getObjectField(param.thisObject, "mDateFormat");
-                if (mDateFormat == null) {
-                    // フォーマットを更新
+        if (VersionUtil.isKitKatOrLator()) {
+            // KitKatの場合はフックで済ませる
+            XposedHelpers.findAndHookMethod(clsDateView, "updateClock", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                    Object mDateFormat = XposedHelpers.getObjectField(param.thisObject,
+                            "mDateFormat");
+                    if (mDateFormat == null) {
+                        // フォーマットを更新
 
+                        Object additionalInstanceField = XposedHelpers
+                                .getAdditionalInstanceField(param.thisObject,
+                                        ADDITIONAL_FORMAT);
+                        if (additionalInstanceField == null) {
+                            // モジュールで追加した値がない場合は元のメソッドを実行
+                            return;
+                        }
+
+                        // フォーマットをセット
+                        XposedHelpers.setObjectField(param.thisObject, "mDateFormat",
+                                additionalInstanceField);
+                    }
+                }
+            });
+        } else {
+            // JBの場合は諦めて書き換える
+            XposedHelpers.findAndHookMethod(clsDateView, "updateClock", new XC_MethodReplacement() {
+                @Override
+                protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
                     Object additionalInstanceField = XposedHelpers
                             .getAdditionalInstanceField(param.thisObject,
                                     ADDITIONAL_FORMAT);
                     if (additionalInstanceField == null) {
                         // モジュールで追加した値がない場合は元のメソッドを実行
-                        return;
+                        return XUtil.invokeOriginalMethod(param);
                     }
 
-                    // フォーマットをセット
-                    XposedHelpers.setObjectField(param.thisObject, "mDateFormat",
-                            additionalInstanceField);
+                    TextView thisTextView = (TextView) param.thisObject;
+                    Date date = new Date();
+                    SimpleDateFormat dateFormat = (SimpleDateFormat) additionalInstanceField;
+                    thisTextView.setText(dateFormat.format(date));
+                    return null;
                 }
-            }
-        });
+            });
+        }
     }
 
     @XTargetPackage(XConst.PKG_SYSTEM_UI)
@@ -150,15 +176,15 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
                     public void handleLayoutInflated(LayoutInflatedParam liparam)
                             throws Throwable {
                         // 時計のビューを取得
+                        int id_datetime = liparam.res.getIdentifier(
+                                "datetime", "id", XConst.PKG_SYSTEM_UI);
                         ViewGroup datetimeViewGroup = (ViewGroup) liparam.view
-                                .findViewById(liparam.res.getIdentifier(
-                                        "datetime", "id", XConst.PKG_SYSTEM_UI));
-                        TextView mDateView = (TextView) datetimeViewGroup
-                                .findViewById(liparam.res.getIdentifier(
-                                        "date", "id", XConst.PKG_SYSTEM_UI));
-                        TextView mClockView = (TextView) datetimeViewGroup
-                                .findViewById(liparam.res.getIdentifier(
-                                        "clock", "id", XConst.PKG_SYSTEM_UI));
+                                .findViewById(id_datetime);
+                        int id_date = liparam.res.getIdentifier("date", "id", XConst.PKG_SYSTEM_UI);
+                        TextView mDateView = (TextView) datetimeViewGroup.findViewById(id_date);
+                        int id_clock = liparam.res.getIdentifier(
+                                "clock", "id", XConst.PKG_SYSTEM_UI);
+                        TextView mClockView = (TextView) datetimeViewGroup.findViewById(id_clock);
                         // デフォルト値を保存
                         mSettings.defaultTimeTextSize = mClockView
                                 .getTextSize();
