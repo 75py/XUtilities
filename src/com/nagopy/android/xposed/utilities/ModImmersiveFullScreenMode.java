@@ -25,6 +25,8 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
 import com.nagopy.android.xposed.AbstractXposedModule;
+import com.nagopy.android.xposed.utilities.XposedModules.XMinSdkVersion;
+import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
 import com.nagopy.android.xposed.utilities.setting.ModImmersiveFullScreenModeSettingsGen;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
@@ -35,11 +37,12 @@ import de.robv.android.xposed.XposedHelpers;
 /**
  * Immersive full screen modeモジュール.
  */
+@XMinSdkVersion(Build.VERSION_CODES.KITKAT)
 @TargetApi(Build.VERSION_CODES.KITKAT)
 public class ModImmersiveFullScreenMode extends AbstractXposedModule implements
         IXposedHookZygoteInit {
 
-    @XResource
+    @XModuleSettings
     private ModImmersiveFullScreenModeSettingsGen mSettings;
 
     // 動作モードの値
@@ -51,8 +54,7 @@ public class ModImmersiveFullScreenMode extends AbstractXposedModule implements
 
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
-        if (!mSettings.masterModImmersiveFullScreenModeEnabled
-                || mSettings.immersiveMode.equals(MODE_DISABLE)) {
+        if (mSettings.immersiveMode.equals(MODE_DISABLE)) {
             // 無効になっている場合は何もしない
             return;
         }

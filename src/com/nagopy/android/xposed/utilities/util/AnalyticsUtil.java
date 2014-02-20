@@ -1,8 +1,6 @@
 
 package com.nagopy.android.xposed.utilities.util;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.Set;
 
 import android.content.Context;
@@ -45,9 +43,7 @@ public class AnalyticsUtil {
             pushSettingChengedEvent(tracker, key, (Set<?>) newValue);
         } else {
             String newValueStr = newValue == null ? "nullpo" : String.valueOf(newValue);
-            tracker.send(MapBuilder.createEvent("settingChenged", key, urlEncode(newValueStr),
-                    null)
-                    .build());
+            tracker.send(MapBuilder.createEvent("settingChenged", key, newValueStr, null).build());
         }
     }
 
@@ -63,19 +59,5 @@ public class AnalyticsUtil {
         tracker.send(MapBuilder
                 .createEvent("settingChengedSet", key, String.valueOf(newValue.size()), null)
                 .build());
-    }
-
-    /**
-     * URLエンコードして返す.
-     * 
-     * @param source 変換する文字列
-     * @return UTF-8でエンコードした文字列
-     */
-    private static String urlEncode(String source) {
-        try {
-            return URLEncoder.encode(source.toString(), "utf-8");
-        } catch (UnsupportedEncodingException e) {
-            return source;
-        }
     }
 }

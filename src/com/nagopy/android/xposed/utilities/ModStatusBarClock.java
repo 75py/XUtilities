@@ -16,6 +16,7 @@
 
 package com.nagopy.android.xposed.utilities;
 
+import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
@@ -37,8 +38,9 @@ import com.nagopy.android.common.pref.FontListPreference;
 import com.nagopy.android.common.util.DimenUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XConst;
-import com.nagopy.android.xposed.util.XLog;
 import com.nagopy.android.xposed.util.XUtil;
+import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
+import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
 import com.nagopy.android.xposed.utilities.setting.ModStatusBarClockSettingsGen;
 import com.nagopy.android.xposed.utilities.util.Const;
 
@@ -61,9 +63,9 @@ public class ModStatusBarClock extends AbstractXposedModule implements
         IXposedHookZygoteInit, IXposedHookLoadPackage,
         IXposedHookInitPackageResources {
 
-    private static final String ADDITIONAL_FIELD_FORMAT = "modStatusBarClockFormat";
+    private static final String ADDITIONAL_FIELD_FORMAT = Const.ADDITIONAL_DATE_FORMAT;
 
-    @XResource
+    @XModuleSettings
     private ModStatusBarClockSettingsGen mStatusBarClockSettings;
 
     private String modulePath;
@@ -73,14 +75,9 @@ public class ModStatusBarClock extends AbstractXposedModule implements
         modulePath = startupParam.modulePath;
     }
 
+    @XTargetPackage(XConst.PKG_SYSTEM_UI)
     @Override
     public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
-        if (!XUtil.isSystemUi(lpparam)) {
-            // システムUI以外では何もしない
-            return;
-        }
-        XLog.d(getClass().getSimpleName(), "handleLoadPackage");
-
         // Clockのクラスを取得
         final Class<?> clockClass = XposedHelpers.findClass(
                 "com.android.systemui.statusbar.policy.Clock",
@@ -186,7 +183,9 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                 ViewHolder viewHolder = (ViewHolder) clockView
                         .getTag(R.id.tag_status_bar_clock_view_holder);
                 Animation anim = viewHolder.mStatusBarContents.getAnimation();
-                clockView.startAnimation(anim);
+                if (anim != null) {
+                    clockView.startAnimation(anim);
+                }
             }
         });
 
@@ -216,15 +215,10 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                 });
     }
 
+    @XTargetPackage(XConst.PKG_SYSTEM_UI)
     @Override
     public void handleInitPackageResources(
             final InitPackageResourcesParam resparam) throws Throwable {
-        if (!XUtil.isSystemUi(resparam)) {
-            // システムUI以外では何もしない
-            return;
-        }
-        XLog.d(getClass().getSimpleName(), "handleInitPackageResources");
-
         // レイアウトをごにょごにょ
         resparam.res.hookLayout(XConst.PKG_SYSTEM_UI, "layout",
                 "super_status_bar", new XC_LayoutInflated(-7575) { // 優先度低
@@ -274,22 +268,22 @@ public class ModStatusBarClock extends AbstractXposedModule implements
     private static class StatusBarClockSettingChangedReceiver extends
             com.nagopy.android.xposed.SettingChangedReceiver {
 
+        private WeakReference<TextView> mClockView;
+
         public StatusBarClockSettingChangedReceiver(TextView clock,
-                ModStatusBarClockSettingsGen clockModDao) {
-            super(clock, clockModDao,
-                    Const.ACTION_STATUS_BAR_CLOCK_SETTING_CHANGED);
+                ModStatusBarClockSettingsGen settings) {
+            super(settings, Const.ACTION_STATUS_BAR_CLOCK_SETTING_CHANGED);
+            mClockView = new WeakReference<TextView>(clock);
         }
 
         @Override
         protected void onDataChanged() {
-            Object thisObj = thisObject.get();
+            TextView clockView = mClockView.get();
             Object dataObj = dataObject.get();
-            if (isNotNull(dataObj, thisObj)) {
+            if (isNotNull(dataObj, clockView)) {
                 // 設定変更反映、表示更新
-                TextView clockTextView = (TextView) thisObj;
-                updateSettings(clockTextView,
-                        (ModStatusBarClockSettingsGen) dataObj);
-                updateClock(clockTextView);
+                updateSettings(clockView, (ModStatusBarClockSettingsGen) dataObj);
+                updateClock(clockView);
             }
         }
 

@@ -24,9 +24,6 @@ import com.nagopy.android.xposed.utilities.util.Const;
 @XSettings(modulePackageName = Const.PACKAGE_NAME)
 class ModBrightnessSettings {
 
-    /** モジュールを有効にするかどうか */
-    public boolean masterModBrightnessEnable;
-
     /** 最低輝度 */
     @XIntDefaultValue(20)
     public int minBrightness;

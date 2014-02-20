@@ -21,9 +21,6 @@ import com.nagopy.android.xposed.utilities.util.Const;
 
 @XSettings(modulePackageName = Const.PACKAGE_NAME)
 class ModBatteryIconSettings {
-
-    /** モジュールを有効にするかどうか */
-    public boolean masterModBatteryIconEnable;
     
     public Boolean useCircleBatteryIcon;
 

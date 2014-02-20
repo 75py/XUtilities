@@ -30,8 +30,10 @@ import android.widget.TextView;
 
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XConst;
-import com.nagopy.android.xposed.util.XLog;
 import com.nagopy.android.xposed.util.XUtil;
+import com.nagopy.android.xposed.utilities.XposedModules.XMinSdkVersion;
+import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
+import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
 import com.nagopy.android.xposed.utilities.setting.ModNotificationSettingsGen;
 
 import de.robv.android.xposed.IXposedHookInitPackageResources;
@@ -44,27 +46,18 @@ import de.robv.android.xposed.callbacks.XC_InitPackageResources.InitPackageResou
 import de.robv.android.xposed.callbacks.XC_LayoutInflated;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 
+@XMinSdkVersion(Build.VERSION_CODES.JELLY_BEAN_MR2)
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class ModNotification extends AbstractXposedModule implements IXposedHookLoadPackage,
         IXposedHookInitPackageResources {
 
-    @XResource
+    @XModuleSettings
     private ModNotificationSettingsGen mNotificationSettings;
 
+    @XTargetPackage(XConst.PKG_SYSTEM_UI)
     @Override
     public void handleInitPackageResources(final InitPackageResourcesParam resparam)
             throws Throwable {
-        if (!XUtil.isSystemUi(resparam)) {
-            return;
-        }
-
-        if (!mNotificationSettings.masterModNotificationEnable) {
-            log("handleInitPackageResources. do nothing.");
-            return;
-        }
-
-        log("handleInitPackageResources start");
-
         resparam.res.hookLayout(XConst.PKG_SYSTEM_UI, "layout", "super_status_bar",
                 new XC_LayoutInflated() {
                     @Override
@@ -132,23 +125,11 @@ public class ModNotification extends AbstractXposedModule implements IXposedHook
                         }
                     }
                 });
-
-        log("handleInitPackageResources end");
     }
 
+    @XTargetPackage(XConst.PKG_SYSTEM_UI)
     @Override
     public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
-        if (!XUtil.isSystemUi(lpparam)) {
-            return;
-        }
-
-        if (!mNotificationSettings.masterModNotificationEnable) {
-            log("handleLoadPackage. do nothing.");
-            return;
-        }
-
-        log("handleLoadPackage start");
-
         // アイコンだけを非表示にする
         Class<?> clsStatusBarIcon = XposedHelpers.findClass(
                 "com.android.internal.statusbar.StatusBarIcon", lpparam.classLoader);
@@ -158,7 +139,6 @@ public class ModNotification extends AbstractXposedModule implements IXposedHook
                 String iconPackage = (String) XposedHelpers.getObjectField(param.thisObject,
                         "iconPackage");
                 if (mNotificationSettings.hideNotificationIconPackages.contains(iconPackage)) {
-                    XLog.d("StatusBarIcon", "target package:" + iconPackage);
                     XposedHelpers.setBooleanField(param.thisObject, "visible", false);
                 }
             }
@@ -172,8 +152,6 @@ public class ModNotification extends AbstractXposedModule implements IXposedHook
                         StatusBarNotification stb = (StatusBarNotification) param.args[1];
                         String packageName = stb.getPackageName();
                         if (mNotificationSettings.hideAllNotificationPackages.contains(packageName)) {
-                            XLog.d("PhoneStatusBar.addNotification", "target package:"
-                                    + packageName);
                             // do nothing
                             return null;
                         } else {
@@ -202,7 +180,5 @@ public class ModNotification extends AbstractXposedModule implements IXposedHook
                         }
                     });
         }
-
-        log("handleLoadPackage end");
     }
 }

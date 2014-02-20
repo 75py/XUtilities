@@ -24,9 +24,6 @@ import com.nagopy.android.xposed.utilities.util.Const;
 @XSettings(modulePackageName = Const.PACKAGE_NAME)
 class ModNotificationSettings {
 
-    /** モジュールを使用するかどうか */
-    public Boolean masterModNotificationEnable;
-
     public Boolean hideNotificationHeader;
 
     /** 通知を消すパッケージ名のセット */

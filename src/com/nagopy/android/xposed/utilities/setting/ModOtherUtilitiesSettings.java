@@ -22,9 +22,6 @@ import com.nagopy.android.xposed.utilities.util.Const;
 @XSettings(modulePackageName = Const.PACKAGE_NAME)
 class ModOtherUtilitiesSettings {
 
-    /** モジュールを有効にするかどうか */
-    public Boolean masterModOtherUtilitiesEnable;
-
     /** メニューキーを表示するか */
     public Boolean showMenuKey;
 

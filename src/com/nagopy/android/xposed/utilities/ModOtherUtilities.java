@@ -23,8 +23,10 @@ import android.view.KeyEvent;
 
 import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
-import com.nagopy.android.xposed.util.XLog;
+import com.nagopy.android.xposed.util.XConst;
 import com.nagopy.android.xposed.util.XUtil;
+import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
+import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
 import com.nagopy.android.xposed.utilities.setting.ModOtherUtilitiesSettingsGen;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
@@ -38,16 +40,11 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 public class ModOtherUtilities extends AbstractXposedModule implements IXposedHookZygoteInit,
         IXposedHookLoadPackage {
 
-    @XResource
+    @XModuleSettings
     private ModOtherUtilitiesSettingsGen mOtherUtilitiesSettings;
 
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
-        if (!mOtherUtilitiesSettings.masterModOtherUtilitiesEnable) {
-            XLog.d(getClass().getSimpleName(), "initZygote, do nothing.");
-            return;
-        }
-
         // IME通知表示有無
         XResources.setSystemWideReplacement("android", "bool", "show_ongoing_ime_switcher",
                 mOtherUtilitiesSettings.showOngoingImeSwitcher);
@@ -77,7 +74,6 @@ public class ModOtherUtilities extends AbstractXposedModule implements IXposedHo
                         protected Object replaceHookedMethod(MethodHookParam param)
                                 throws Throwable {
                             int keyCode = (Integer) param.args[0];
-                            XLog.d("PhoneWindowManager", "isWakeKeyWhenScreenOff:" + keyCode);
                             switch (keyCode) {
                                 case KeyEvent.KEYCODE_VOLUME_DOWN:
                                 case KeyEvent.KEYCODE_VOLUME_UP:
@@ -90,21 +86,11 @@ public class ModOtherUtilities extends AbstractXposedModule implements IXposedHo
                         }
                     });
         }
-
-        XLog.d(getClass().getSimpleName() + " mission complete!");
     }
 
+    @XTargetPackage(XConst.PKG_SYSTEM_UI)
     @Override
     public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
-        if (!XUtil.isSystemUi(lpparam)) {
-            return;
-        }
-
-        if (!mOtherUtilitiesSettings.masterModOtherUtilitiesEnable) {
-            XLog.d(getClass().getSimpleName(), "handleLoadPackage, do nothing.");
-            return;
-        }
-
         if (mOtherUtilitiesSettings.showMenuKey) {
             Class<?> navigationBarViewClass = XposedHelpers.findClass(
                     "com.android.systemui.statusbar.phone.NavigationBarView", lpparam.classLoader);

@@ -1,8 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.nagopy.android.xposed.utilities"
-    android:versionCode="11"
-    android:versionName="1.4.5" >
+    android:versionCode="12"
+    android:versionName="1.5.0" >
 
     <uses-sdk
         android:minSdkVersion="16"
@@ -69,6 +69,22 @@
                 <action android:name="com.nagopy.android.xposed.utilities.ACTION_BRIGHTNESS_LOG" />
             </intent-filter>
         </receiver>
+        <receiver
+            android:name="com.nagopy.android.xposed.utilities.receiver.AlwaysPerAppsReceiver"
+            android:exported="true"
+            tools:ignore="ExportedReceiver" >
+            <intent-filter>
+                <action android:name="com.nagopy.android.xposed.utilities.ACTION_ALWAYS_USE_PER_APPS" />
+            </intent-filter>
+        </receiver>
+
+        <activity android:name="com.nagopy.android.xposed.utilities.preference.AlwaysUsePerAppsSettingActivity" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
