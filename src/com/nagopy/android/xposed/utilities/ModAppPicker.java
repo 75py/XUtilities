@@ -174,8 +174,15 @@ public class ModAppPicker extends AbstractXposedModule implements IXposedHookZyg
                         mAbsListView.setOnItemClickListener(new OnItemClickListener() {
                             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
-                                final int checkedPos = VersionUtil.isKitKatOrLator() ? mAbsListView
-                                        .getCheckedItemPosition() : position;
+                                int checkedPos;
+                                if (VersionUtil.isKitKatOrLator()) {
+                                    checkedPos = mAbsListView.getCheckedItemPosition();
+                                    if (checkedPos == AbsListView.INVALID_POSITION) {
+                                        checkedPos = position;
+                                    }
+                                } else {
+                                    checkedPos = position;
+                                }
                                 final boolean enabled = checkedPos != GridView.INVALID_POSITION;
                                 log("onItemClick:" + checkedPos + ", " + enabled);
                                 if (enabled) {
