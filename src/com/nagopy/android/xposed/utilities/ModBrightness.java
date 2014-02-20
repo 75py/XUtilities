@@ -22,13 +22,14 @@ import android.content.res.XResources;
 
 import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
+import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
 import com.nagopy.android.xposed.utilities.setting.ModBrightnessSettingsGen;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
 
 public class ModBrightness extends AbstractXposedModule implements IXposedHookZygoteInit {
 
-    @XResource
+    @XModuleSettings
     private ModBrightnessSettingsGen mBrightnessSettings;
 
     @Override

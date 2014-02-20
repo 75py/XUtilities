@@ -29,6 +29,7 @@ import com.nagopy.android.common.util.GestureUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XLog;
 import com.nagopy.android.xposed.utilities.XposedModules.XMinSdkVersion;
+import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
 import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
 import com.nagopy.android.xposed.utilities.service.TorchService;
 import com.nagopy.android.xposed.utilities.setting.ModLockscreenTorchSettingsGen;
@@ -45,7 +46,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
 public class ModLockscreenTorch extends AbstractXposedModule implements IXposedHookLoadPackage {
 
-    @XResource
+    @XModuleSettings
     private ModLockscreenTorchSettingsGen mLockscreenTorchSettings;
 
     /** キーガードのパッケージ名 */

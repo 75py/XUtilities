@@ -41,6 +41,7 @@ import android.widget.ListAdapter;
 import com.nagopy.android.common.util.DimenUtil;
 import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
+import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
 import com.nagopy.android.xposed.utilities.setting.AlwaysUsePerAppsList.PerAppsSetting;
 import com.nagopy.android.xposed.utilities.setting.ModAppPickerSettingsGen;
 import com.nagopy.android.xposed.utilities.util.Const;
@@ -61,7 +62,7 @@ public class ModAppPicker extends AbstractXposedModule implements IXposedHookZyg
     /** アクション名保存用のキー */
     private static final String KEY_TARGET_ACTION = "targetAction";
 
-    @XResource
+    @XModuleSettings
     private ModAppPickerSettingsGen mSettings;
 
     @Override

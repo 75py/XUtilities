@@ -27,6 +27,7 @@ import com.nagopy.android.common.util.DimenUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XConst;
 import com.nagopy.android.xposed.utilities.XposedModules.XMinSdkVersion;
+import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
 import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
 import com.nagopy.android.xposed.utilities.receiver.BatteryController;
 import com.nagopy.android.xposed.utilities.setting.ModBatteryIconSettingsGen;
@@ -51,7 +52,7 @@ public class ModBatteryIcon extends AbstractXposedModule implements
 
     private static final int BATTERY_VIEW_ID = 7575;
 
-    @XResource
+    @XModuleSettings
     private ModBatteryIconSettingsGen mBatteryIconSettings;
 
     private String modulePath;

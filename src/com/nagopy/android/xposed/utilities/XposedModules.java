@@ -20,6 +20,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -78,19 +79,30 @@ public class XposedModules implements IXposedHookZygoteInit, IXposedHookLoadPack
 
             XModuleInfo info = new XModuleInfo();
             info.moduleInstance = module.newInstance();
+
+            // モジュール設定を検索、インスタンス生成
+            Field[] fields = module.getDeclaredFields();
+            for (Field field : fields) {
+                if (field.isAnnotationPresent(XModuleSettings.class)) {
+                    Object settings = field.getType().getConstructor().newInstance();
+                    field.setAccessible(true);
+                    field.set(info.moduleInstance, settings);
+                }
+            }
+
             XMinSdkVersion classMinSdkVersion = module.getAnnotation(XMinSdkVersion.class);
 
             if (isImplemented(module, IXposedHookZygoteInit.class)) {
                 XModuleMethod methodInfo = new XModuleMethod();
                 methodInfo.method = module.getMethod("initZygote", StartupParam.class);
-                XTargetPackage targetPackage = methodInfo.method
-                        .getAnnotation(XTargetPackage.class);
-                if (targetPackage != null) {
+                if (methodInfo.method.isAnnotationPresent(XTargetPackage.class)) {
+                    XTargetPackage targetPackage = methodInfo.method
+                            .getAnnotation(XTargetPackage.class);
                     methodInfo.targetPackageName = Arrays.asList(targetPackage.value());
                 }
                 if (classMinSdkVersion != null) {
                     methodInfo.minSdkVersion = classMinSdkVersion.value();
-                } else {
+                } else if (methodInfo.method.isAnnotationPresent(XMinSdkVersion.class)) {
                     XMinSdkVersion minSdkVersion = methodInfo.method
                             .getAnnotation(XMinSdkVersion.class);
                     if (minSdkVersion != null) {
@@ -103,14 +115,14 @@ public class XposedModules implements IXposedHookZygoteInit, IXposedHookLoadPack
             if (isImplemented(module, IXposedHookLoadPackage.class)) {
                 XModuleMethod methodInfo = new XModuleMethod();
                 methodInfo.method = module.getMethod("handleLoadPackage", LoadPackageParam.class);
-                XTargetPackage targetPackage = methodInfo.method
-                        .getAnnotation(XTargetPackage.class);
-                if (targetPackage != null) {
+                if (methodInfo.method.isAnnotationPresent(XTargetPackage.class)) {
+                    XTargetPackage targetPackage = methodInfo.method
+                            .getAnnotation(XTargetPackage.class);
                     methodInfo.targetPackageName = Arrays.asList(targetPackage.value());
                 }
                 if (classMinSdkVersion != null) {
                     methodInfo.minSdkVersion = classMinSdkVersion.value();
-                } else {
+                } else if (methodInfo.method.isAnnotationPresent(XMinSdkVersion.class)) {
                     XMinSdkVersion minSdkVersion = methodInfo.method
                             .getAnnotation(XMinSdkVersion.class);
                     if (minSdkVersion != null) {
@@ -124,14 +136,14 @@ public class XposedModules implements IXposedHookZygoteInit, IXposedHookLoadPack
                 XModuleMethod methodInfo = new XModuleMethod();
                 methodInfo.method = module.getMethod("handleInitPackageResources",
                         InitPackageResourcesParam.class);
-                XTargetPackage targetPackage = methodInfo.method
-                        .getAnnotation(XTargetPackage.class);
-                if (targetPackage != null) {
+                if (methodInfo.method.isAnnotationPresent(XTargetPackage.class)) {
+                    XTargetPackage targetPackage = methodInfo.method
+                            .getAnnotation(XTargetPackage.class);
                     methodInfo.targetPackageName = Arrays.asList(targetPackage.value());
                 }
                 if (classMinSdkVersion != null) {
                     methodInfo.minSdkVersion = classMinSdkVersion.value();
-                } else {
+                } else if (methodInfo.method.isAnnotationPresent(XMinSdkVersion.class)) {
                     XMinSdkVersion minSdkVersion = methodInfo.method
                             .getAnnotation(XMinSdkVersion.class);
                     if (minSdkVersion != null) {
@@ -286,6 +298,11 @@ public class XposedModules implements IXposedHookZygoteInit, IXposedHookLoadPack
         int minSdkVersion = Build.VERSION_CODES.JELLY_BEAN;
         /** 対象パッケージ名 */
         List<String> targetPackageName = Collections.emptyList();
+    }
+
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface XModuleSettings {
     }
 
     @Target(ElementType.METHOD)

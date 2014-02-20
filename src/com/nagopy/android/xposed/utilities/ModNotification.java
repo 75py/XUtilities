@@ -32,6 +32,7 @@ import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XConst;
 import com.nagopy.android.xposed.util.XUtil;
 import com.nagopy.android.xposed.utilities.XposedModules.XMinSdkVersion;
+import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
 import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
 import com.nagopy.android.xposed.utilities.setting.ModNotificationSettingsGen;
 
@@ -50,7 +51,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 public class ModNotification extends AbstractXposedModule implements IXposedHookLoadPackage,
         IXposedHookInitPackageResources {
 
-    @XResource
+    @XModuleSettings
     private ModNotificationSettingsGen mNotificationSettings;
 
     @XTargetPackage(XConst.PKG_SYSTEM_UI)

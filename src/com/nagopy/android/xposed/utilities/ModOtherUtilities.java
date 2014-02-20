@@ -24,8 +24,8 @@ import android.view.KeyEvent;
 import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XConst;
-import com.nagopy.android.xposed.util.XLog;
 import com.nagopy.android.xposed.util.XUtil;
+import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
 import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
 import com.nagopy.android.xposed.utilities.setting.ModOtherUtilitiesSettingsGen;
 
@@ -40,7 +40,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 public class ModOtherUtilities extends AbstractXposedModule implements IXposedHookZygoteInit,
         IXposedHookLoadPackage {
 
-    @XResource
+    @XModuleSettings
     private ModOtherUtilitiesSettingsGen mOtherUtilitiesSettings;
 
     @Override
@@ -74,7 +74,6 @@ public class ModOtherUtilities extends AbstractXposedModule implements IXposedHo
                         protected Object replaceHookedMethod(MethodHookParam param)
                                 throws Throwable {
                             int keyCode = (Integer) param.args[0];
-                            XLog.d("PhoneWindowManager", "isWakeKeyWhenScreenOff:" + keyCode);
                             switch (keyCode) {
                                 case KeyEvent.KEYCODE_VOLUME_DOWN:
                                 case KeyEvent.KEYCODE_VOLUME_UP:

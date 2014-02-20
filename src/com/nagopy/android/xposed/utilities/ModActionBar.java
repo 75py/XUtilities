@@ -23,6 +23,7 @@ import android.view.ViewGroup.MarginLayoutParams;
 
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.utilities.XposedModules.XMinSdkVersion;
+import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
 import com.nagopy.android.xposed.utilities.setting.ModActionBarSettingsGen;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
@@ -35,7 +36,7 @@ import de.robv.android.xposed.XposedHelpers;
 @XMinSdkVersion(Build.VERSION_CODES.KITKAT)
 public class ModActionBar extends AbstractXposedModule implements IXposedHookZygoteInit {
 
-    @XResource
+    @XModuleSettings
     private ModActionBarSettingsGen mSettings;
 
     @Override

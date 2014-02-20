@@ -36,6 +36,7 @@ import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.SettingChangedReceiver;
 import com.nagopy.android.xposed.util.XUtil;
 import com.nagopy.android.xposed.utilities.XposedModules.XMinSdkVersion;
+import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
 import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
 import com.nagopy.android.xposed.utilities.setting.ModLockscreenClockSettingsGen;
 import com.nagopy.android.xposed.utilities.util.Const;
@@ -60,7 +61,7 @@ public class ModLockscreenClock extends AbstractXposedModule implements
 
     private String modulePath;
 
-    @XResource
+    @XModuleSettings
     private ModLockscreenClockSettingsGen mSettings;
 
     /** キーガードのパッケージ名 */

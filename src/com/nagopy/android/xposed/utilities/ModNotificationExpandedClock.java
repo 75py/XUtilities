@@ -40,6 +40,7 @@ import com.nagopy.android.xposed.util.XConst;
 import com.nagopy.android.xposed.util.XLog;
 import com.nagopy.android.xposed.util.XUtil;
 import com.nagopy.android.xposed.utilities.XposedModules.XMinSdkVersion;
+import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
 import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
 import com.nagopy.android.xposed.utilities.setting.ModNotificationExpandedClockSettingsGen;
 import com.nagopy.android.xposed.utilities.util.Const;
@@ -66,7 +67,7 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
 
     private String modulePath;
 
-    @XResource
+    @XModuleSettings
     private ModNotificationExpandedClockSettingsGen mSettings;
 
     @Override

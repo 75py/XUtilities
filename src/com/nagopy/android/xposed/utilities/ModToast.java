@@ -35,6 +35,7 @@ import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.common.util.ViewUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XUtil;
+import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
 import com.nagopy.android.xposed.utilities.setting.ModToastSettingsGen;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
@@ -48,7 +49,7 @@ import de.robv.android.xposed.XposedHelpers;
  */
 public class ModToast extends AbstractXposedModule implements IXposedHookZygoteInit {
 
-    @XResource
+    @XModuleSettings
     private ModToastSettingsGen mToastSettings;
 
     @Override

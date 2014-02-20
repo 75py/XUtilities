@@ -26,6 +26,7 @@ import android.view.inputmethod.InputMethodManager;
 
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.utilities.XposedModules.XMinSdkVersion;
+import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
 import com.nagopy.android.xposed.utilities.setting.ModImmersiveFullScreenModeSettingsGen;
 
 import de.robv.android.xposed.IXposedHookZygoteInit;
@@ -41,7 +42,7 @@ import de.robv.android.xposed.XposedHelpers;
 public class ModImmersiveFullScreenMode extends AbstractXposedModule implements
         IXposedHookZygoteInit {
 
-    @XResource
+    @XModuleSettings
     private ModImmersiveFullScreenModeSettingsGen mSettings;
 
     // 動作モードの値

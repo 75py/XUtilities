@@ -39,6 +39,7 @@ import com.nagopy.android.common.util.DimenUtil;
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XConst;
 import com.nagopy.android.xposed.util.XUtil;
+import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
 import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
 import com.nagopy.android.xposed.utilities.setting.ModStatusBarClockSettingsGen;
 import com.nagopy.android.xposed.utilities.util.Const;
@@ -64,7 +65,7 @@ public class ModStatusBarClock extends AbstractXposedModule implements
 
     private static final String ADDITIONAL_FIELD_FORMAT = Const.ADDITIONAL_DATE_FORMAT;
 
-    @XResource
+    @XModuleSettings
     private ModStatusBarClockSettingsGen mStatusBarClockSettings;
 
     private String modulePath;

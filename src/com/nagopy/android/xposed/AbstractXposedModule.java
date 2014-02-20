@@ -16,10 +16,6 @@
 
 package com.nagopy.android.xposed;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 
 import android.annotation.SuppressLint;
@@ -33,36 +29,9 @@ import com.nagopy.android.xposed.util.XLog;
 import de.robv.android.xposed.XposedHelpers;
 
 /**
- * Xposedモジュールのベースクラス.<br>
- * とりあえず{@link XResource}をつけたフィールドにデフォルトコンストラクタで生成したインスタンスをセットする。
+ * Xposedモジュールのベースクラス.
  */
 public abstract class AbstractXposedModule {
-
-    {
-        Field[] fields = this.getClass().getDeclaredFields();
-        for (Field field : fields) {
-            XResource xResource = field.getAnnotation(XResource.class);
-            if (xResource != null) {
-                // XLog.d("xResource:" + field);
-                try {
-                    Class<?> cls = field.getType();
-                    Object instance = cls.newInstance();
-                    field.setAccessible(true);
-                    field.set(this, instance);
-                } catch (Exception e) {
-                     XLog.e("xResource error:" + field + "," + e);
-                }
-            }
-        }
-    }
-
-    /**
-     * デフォルトコンストラクタで自動生成を行うマーカー.
-     */
-    @Target(ElementType.FIELD)
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface XResource {
-    }
 
     protected static int findId(String packageName, String idName, ClassLoader classLoader)
             throws IllegalAccessException, IllegalArgumentException {
