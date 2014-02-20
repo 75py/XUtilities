@@ -45,10 +45,6 @@ public class ModOtherUtilities extends AbstractXposedModule implements IXposedHo
 
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
-        if (!mOtherUtilitiesSettings.masterModOtherUtilitiesEnable) {
-            return;
-        }
-
         // IME通知表示有無
         XResources.setSystemWideReplacement("android", "bool", "show_ongoing_ime_switcher",
                 mOtherUtilitiesSettings.showOngoingImeSwitcher);
@@ -96,11 +92,6 @@ public class ModOtherUtilities extends AbstractXposedModule implements IXposedHo
     @XTargetPackage(XConst.PKG_SYSTEM_UI)
     @Override
     public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
-        if (!mOtherUtilitiesSettings.masterModOtherUtilitiesEnable) {
-            XLog.d(getClass().getSimpleName(), "handleLoadPackage, do nothing.");
-            return;
-        }
-
         if (mOtherUtilitiesSettings.showMenuKey) {
             Class<?> navigationBarViewClass = XposedHelpers.findClass(
                     "com.android.systemui.statusbar.phone.NavigationBarView", lpparam.classLoader);

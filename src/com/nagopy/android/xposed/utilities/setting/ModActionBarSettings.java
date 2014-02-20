@@ -24,8 +24,6 @@ import com.nagopy.android.xposed.utilities.util.Const;
 @XSettings(modulePackageName = Const.PACKAGE_NAME)
 class ModActionBarSettings {
 
-    public Boolean masterModActionBarEnable;
-
     /** アクションバーを下に移動する */
     public Boolean actionBarBottomEnable;
 

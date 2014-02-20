@@ -24,9 +24,6 @@ import com.nagopy.android.xposed.utilities.util.Const;
 @XSettings(modulePackageName = Const.PACKAGE_NAME)
 public class ModImmersiveFullScreenModeSettings {
 
-    /** モジュールを有効にするかどうか */
-    public Boolean masterModImmersiveFullScreenModeEnabled;
-
     /** 動作モード */
     public String immersiveMode;
 

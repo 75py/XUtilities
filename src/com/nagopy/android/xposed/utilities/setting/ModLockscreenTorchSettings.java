@@ -16,16 +16,11 @@
 
 package com.nagopy.android.xposed.utilities.setting;
 
-import com.nagopy.android.xposed.annotation.XBooleanDefaultValue;
 import com.nagopy.android.xposed.annotation.XSettings;
 import com.nagopy.android.xposed.utilities.util.Const;
 
 @XSettings(modulePackageName = Const.PACKAGE_NAME)
 class ModLockscreenTorchSettings {
-
-    /** モジュールを有効にするかどうか */
-    @XBooleanDefaultValue(false)
-    public boolean masterModLockscreenTorchEnable;
 
     /** ダブルタップでライトのオン・オフ切り替えを行うか */
     public Boolean lockscreenClockDoubleTapTorch;

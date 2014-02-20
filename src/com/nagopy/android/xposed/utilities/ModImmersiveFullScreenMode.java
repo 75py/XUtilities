@@ -53,8 +53,7 @@ public class ModImmersiveFullScreenMode extends AbstractXposedModule implements
 
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
-        if (!mSettings.masterModImmersiveFullScreenModeEnabled
-                || mSettings.immersiveMode.equals(MODE_DISABLE)) {
+        if (mSettings.immersiveMode.equals(MODE_DISABLE)) {
             // 無効になっている場合は何もしない
             return;
         }

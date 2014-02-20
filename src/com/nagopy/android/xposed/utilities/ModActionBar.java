@@ -40,11 +40,6 @@ public class ModActionBar extends AbstractXposedModule implements IXposedHookZyg
 
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
-        if (!mSettings.masterModActionBarEnable) {
-            // 無効になっている場合は何もしない
-            return;
-        }
-
         if (mSettings.actionBarBottomEnable) {
             // for KitKat
             // アクションバーを下に表示

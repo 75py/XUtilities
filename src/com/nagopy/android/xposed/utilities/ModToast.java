@@ -53,7 +53,7 @@ public class ModToast extends AbstractXposedModule implements IXposedHookZygoteI
 
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
-        if (!mToastSettings.masterModToastDaoEnable || !mToastSettings.setToastAboveLockscreen) {
+        if (!mToastSettings.setToastAboveLockscreen) {
             return;
         }
 

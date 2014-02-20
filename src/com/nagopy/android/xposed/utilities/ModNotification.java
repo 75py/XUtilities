@@ -57,10 +57,6 @@ public class ModNotification extends AbstractXposedModule implements IXposedHook
     @Override
     public void handleInitPackageResources(final InitPackageResourcesParam resparam)
             throws Throwable {
-        if (!mNotificationSettings.masterModNotificationEnable) {
-            return;
-        }
-
         resparam.res.hookLayout(XConst.PKG_SYSTEM_UI, "layout", "super_status_bar",
                 new XC_LayoutInflated() {
                     @Override
@@ -133,10 +129,6 @@ public class ModNotification extends AbstractXposedModule implements IXposedHook
     @XTargetPackage(XConst.PKG_SYSTEM_UI)
     @Override
     public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
-        if (!mNotificationSettings.masterModNotificationEnable) {
-            return;
-        }
-
         // アイコンだけを非表示にする
         Class<?> clsStatusBarIcon = XposedHelpers.findClass(
                 "com.android.internal.statusbar.StatusBarIcon", lpparam.classLoader);

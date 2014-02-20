@@ -25,8 +25,6 @@ import com.nagopy.android.xposed.utilities.util.Const;
 @XSettings(modulePackageName = Const.PACKAGE_NAME)
 class ModAppPickerSettings {
 
-    public Boolean masterModAppPickerEnable;
-
     /** 「Use by default for this action.」を表示するか */
     public Boolean showAlwaysUse;
 

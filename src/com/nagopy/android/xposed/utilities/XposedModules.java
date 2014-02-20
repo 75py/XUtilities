@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2014 75py
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.nagopy.android.xposed.utilities;
 
@@ -10,15 +25,20 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import android.os.Build;
 
 import com.nagopy.android.xposed.util.XLog;
+import com.nagopy.android.xposed.utilities.util.Const;
 
 import de.robv.android.xposed.IXposedHookInitPackageResources;
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.IXposedHookZygoteInit;
+import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.callbacks.XC_InitPackageResources.InitPackageResourcesParam;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
@@ -29,96 +49,127 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 public class XposedModules implements IXposedHookZygoteInit, IXposedHookLoadPackage,
         IXposedHookInitPackageResources {
 
-    protected Class<?>[] mXposedModules = {
-            ModActionBar.class,
-            ModAppPicker.class,
-            ModBatteryIcon.class,
-            ModBrightness.class,
-            ModImmersiveFullScreenMode.class,
-            ModLockscreenClock.class,
-            ModLockscreenTorch.class,
-            ModNotification.class,
-            ModNotificationExpandedClock.class,
-            ModOtherUtilities.class,
-            ModStatusBarClock.class,
-            ModToast.class,
-    };
-
-    List<XModuleInfo> initZygote = new ArrayList<XposedModules.XModuleInfo>();
-    List<XModuleInfo> handleLoadPackage = new ArrayList<XposedModules.XModuleInfo>();
-    List<XModuleInfo> handleInitPackageResources = new ArrayList<XposedModules.XModuleInfo>();
+    List<XModuleInfo> mXModuleInfoList = new ArrayList<XposedModules.XModuleInfo>();
 
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
-        for (Class<?> module : mXposedModules) {
-            Object moduleInstance = module.newInstance();
+        XSharedPreferences xSharedPreferences = new XSharedPreferences(Const.PACKAGE_NAME);
+        xSharedPreferences.reload();
+
+        /** 適用するモジュールと、マスタ設定のキーのマップ */
+        Map<Class<?>, String> xposedModules = new HashMap<Class<?>, String>();
+        xposedModules.put(ModActionBar.class, "master_mod_action_bar_enable");
+        xposedModules.put(ModAppPicker.class, "master_mod_app_picker_enable");
+        xposedModules.put(ModBatteryIcon.class, "master_mod_battery_icon_enable");
+        xposedModules.put(ModBrightness.class, "master_mod_brightness_enable");
+        xposedModules.put(ModImmersiveFullScreenMode.class,
+                "master_mod_immersive_full_screen_mode_enabled");
+        xposedModules.put(ModLockscreenClock.class, "master_mod_lockscreen_clock_enable");
+        xposedModules.put(ModLockscreenTorch.class, "master_mod_lockscreen_torch_enable");
+        xposedModules.put(ModNotification.class, "master_mod_notification_enable");
+        xposedModules.put(ModNotificationExpandedClock.class,
+                "master_mod_notification_expanded_clock_enable");
+        xposedModules.put(ModOtherUtilities.class, "master_mod_other_utilities_enable");
+        xposedModules.put(ModStatusBarClock.class, "master_mod_status_bar_enable");
+        xposedModules.put(ModToast.class, "master_mod_toast_dao_enable");
+
+        for (Entry<Class<?>, String> entry : xposedModules.entrySet()) {
+            Class<?> module = entry.getKey();
+
+            XModuleInfo info = new XModuleInfo();
+            info.moduleInstance = module.newInstance();
             XMinSdkVersion classMinSdkVersion = module.getAnnotation(XMinSdkVersion.class);
+
             if (isImplemented(module, IXposedHookZygoteInit.class)) {
-                XModuleInfo info = new XModuleInfo();
-                info.moduleInstance = moduleInstance;
-                info.method = module.getMethod("initZygote", StartupParam.class);
-                XTargetPackage targetPackage = info.method.getAnnotation(XTargetPackage.class);
+                XModuleMethod methodInfo = new XModuleMethod();
+                methodInfo.method = module.getMethod("initZygote", StartupParam.class);
+                XTargetPackage targetPackage = methodInfo.method
+                        .getAnnotation(XTargetPackage.class);
                 if (targetPackage != null) {
-                    info.targetPackageName = Arrays.asList(targetPackage.value());
+                    methodInfo.targetPackageName = Arrays.asList(targetPackage.value());
                 }
                 if (classMinSdkVersion != null) {
-                    info.minSdkVersion = classMinSdkVersion.value();
+                    methodInfo.minSdkVersion = classMinSdkVersion.value();
                 } else {
-                    XMinSdkVersion minSdkVersion = info.method.getAnnotation(XMinSdkVersion.class);
+                    XMinSdkVersion minSdkVersion = methodInfo.method
+                            .getAnnotation(XMinSdkVersion.class);
                     if (minSdkVersion != null) {
-                        info.minSdkVersion = minSdkVersion.value();
+                        methodInfo.minSdkVersion = minSdkVersion.value();
                     }
                 }
-                initZygote.add(info);
+                info.initZygote = methodInfo;
             }
+
             if (isImplemented(module, IXposedHookLoadPackage.class)) {
-                XModuleInfo info = new XModuleInfo();
-                info.moduleInstance = moduleInstance;
-                info.method = module.getMethod("handleLoadPackage", LoadPackageParam.class);
-                XTargetPackage targetPackage = info.method.getAnnotation(XTargetPackage.class);
+                XModuleMethod methodInfo = new XModuleMethod();
+                methodInfo.method = module.getMethod("handleLoadPackage", LoadPackageParam.class);
+                XTargetPackage targetPackage = methodInfo.method
+                        .getAnnotation(XTargetPackage.class);
                 if (targetPackage != null) {
-                    info.targetPackageName = Arrays.asList(targetPackage.value());
+                    methodInfo.targetPackageName = Arrays.asList(targetPackage.value());
                 }
                 if (classMinSdkVersion != null) {
-                    info.minSdkVersion = classMinSdkVersion.value();
+                    methodInfo.minSdkVersion = classMinSdkVersion.value();
                 } else {
-                    XMinSdkVersion minSdkVersion = info.method.getAnnotation(XMinSdkVersion.class);
+                    XMinSdkVersion minSdkVersion = methodInfo.method
+                            .getAnnotation(XMinSdkVersion.class);
                     if (minSdkVersion != null) {
-                        info.minSdkVersion = minSdkVersion.value();
+                        methodInfo.minSdkVersion = minSdkVersion.value();
                     }
                 }
-                handleLoadPackage.add(info);
+                info.handleLoadPackage = methodInfo;
             }
+
             if (isImplemented(module, IXposedHookInitPackageResources.class)) {
-                XModuleInfo info = new XModuleInfo();
-                info.moduleInstance = moduleInstance;
-                info.method = module.getMethod("handleInitPackageResources",
+                XModuleMethod methodInfo = new XModuleMethod();
+                methodInfo.method = module.getMethod("handleInitPackageResources",
                         InitPackageResourcesParam.class);
-                XTargetPackage targetPackage = info.method.getAnnotation(XTargetPackage.class);
+                XTargetPackage targetPackage = methodInfo.method
+                        .getAnnotation(XTargetPackage.class);
                 if (targetPackage != null) {
-                    info.targetPackageName = Arrays.asList(targetPackage.value());
+                    methodInfo.targetPackageName = Arrays.asList(targetPackage.value());
                 }
                 if (classMinSdkVersion != null) {
-                    info.minSdkVersion = classMinSdkVersion.value();
+                    methodInfo.minSdkVersion = classMinSdkVersion.value();
                 } else {
-                    XMinSdkVersion minSdkVersion = info.method.getAnnotation(XMinSdkVersion.class);
+                    XMinSdkVersion minSdkVersion = methodInfo.method
+                            .getAnnotation(XMinSdkVersion.class);
                     if (minSdkVersion != null) {
-                        info.minSdkVersion = minSdkVersion.value();
+                        methodInfo.minSdkVersion = minSdkVersion.value();
                     }
                 }
-                handleInitPackageResources.add(info);
+                info.handleInitPackageResources = methodInfo;
             }
+
+            // モジュールの有効・無効を判定
+            info.enabled = xSharedPreferences.getBoolean(entry.getValue(), false);
+
+            // 追加
+            mXModuleInfoList.add(info);
+
+            XLog.d(info);
         }
 
         // 実行
-        for (XModuleInfo info : initZygote) {
-            if (Build.VERSION.SDK_INT >= info.minSdkVersion) {
+        for (XModuleInfo moduleInfo : mXModuleInfoList) {
+            if (!moduleInfo.enabled) {
+                // モジュールが無効の場合は次へ
+                continue;
+            }
+
+            XModuleMethod methodInfo = moduleInfo.initZygote;
+
+            if (methodInfo == null) {
+                continue;
+            }
+
+            if (Build.VERSION.SDK_INT >= methodInfo.minSdkVersion) {
                 try {
-                    info.d("initZygote START");
-                    info.method.invoke(info.moduleInstance, startupParam);
-                    info.d("initZygote COMPLETED!");
+                    moduleInfo.d("initZygote START");
+                    methodInfo.method.invoke(moduleInfo.moduleInstance, startupParam);
+                    moduleInfo.d("initZygote COMPLETED!");
                 } catch (Throwable t) {
-                    info.e("ERROR: " + t.getMessage());
+                    moduleInfo.e("ERROR: " + t.getMessage());
                     XposedBridge.log(t);
                 }
             }
@@ -128,15 +179,27 @@ public class XposedModules implements IXposedHookZygoteInit, IXposedHookLoadPack
     @Override
     public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
         // 実行
-        for (XModuleInfo info : handleLoadPackage) {
-            if (info.targetPackageName.contains(lpparam.packageName)
-                    && Build.VERSION.SDK_INT >= info.minSdkVersion) {
+        for (XModuleInfo moduleInfo : mXModuleInfoList) {
+            if (!moduleInfo.enabled) {
+                // モジュールが無効の場合は次へ
+                continue;
+            }
+
+            XModuleMethod methodInfo = moduleInfo.handleLoadPackage;
+
+            if (methodInfo == null) {
+                continue;
+            }
+
+            boolean checkPkg = methodInfo.targetPackageName.isEmpty()
+                    || methodInfo.targetPackageName.contains(lpparam.packageName);
+            if (checkPkg && Build.VERSION.SDK_INT >= methodInfo.minSdkVersion) {
                 try {
-                    info.d("handleLoadPackage START");
-                    info.method.invoke(info.moduleInstance, lpparam);
-                    info.d("handleLoadPackage COMPLETED!");
+                    moduleInfo.d("handleLoadPackage START");
+                    methodInfo.method.invoke(moduleInfo.moduleInstance, lpparam);
+                    moduleInfo.d("handleLoadPackage COMPLETED!");
                 } catch (Throwable t) {
-                    info.e("ERROR: " + t.getMessage());
+                    moduleInfo.e("ERROR: " + t.getMessage());
                     XposedBridge.log(t);
                 }
             }
@@ -146,15 +209,27 @@ public class XposedModules implements IXposedHookZygoteInit, IXposedHookLoadPack
     @Override
     public void handleInitPackageResources(InitPackageResourcesParam resparam) throws Throwable {
         // 実行
-        for (XModuleInfo info : handleInitPackageResources) {
-            if (info.targetPackageName.contains(resparam.packageName)
-                    && Build.VERSION.SDK_INT >= info.minSdkVersion) {
+        for (XModuleInfo moduleInfo : mXModuleInfoList) {
+            if (!moduleInfo.enabled) {
+                // モジュールが無効の場合は次へ
+                continue;
+            }
+
+            XModuleMethod methodInfo = moduleInfo.handleInitPackageResources;
+
+            if (methodInfo == null) {
+                continue;
+            }
+
+            boolean checkPkg = methodInfo.targetPackageName.isEmpty()
+                    || methodInfo.targetPackageName.contains(resparam.packageName);
+            if (checkPkg && Build.VERSION.SDK_INT >= methodInfo.minSdkVersion) {
                 try {
-                    info.d("handleInitPackageResources START");
-                    info.method.invoke(info.moduleInstance, resparam);
-                    info.d("handleInitPackageResources COMPLETED!");
+                    moduleInfo.d("handleInitPackageResources START");
+                    methodInfo.method.invoke(moduleInfo.moduleInstance, resparam);
+                    moduleInfo.d("handleInitPackageResources COMPLETED!");
                 } catch (Throwable t) {
-                    info.e("ERROR: " + t.getMessage());
+                    moduleInfo.e("ERROR: " + t.getMessage());
                     XposedBridge.log(t);
                 }
             }
@@ -174,10 +249,20 @@ public class XposedModules implements IXposedHookZygoteInit, IXposedHookLoadPack
     }
 
     private static class XModuleInfo {
+        @Override
+        public String toString() {
+            return "XModuleInfo [moduleInstance=" + moduleInstance + ", enabled=" + enabled
+                    + ", initZygote=" + initZygote + ", handleLoadPackage=" + handleLoadPackage
+                    + ", handleInitPackageResources=" + handleInitPackageResources + "]";
+        }
+
+        /** モジュールのインスタンス */
         Object moduleInstance;
-        Method method;
-        int minSdkVersion = Build.VERSION_CODES.JELLY_BEAN;
-        List<String> targetPackageName = Collections.emptyList();
+        /** モジュールの有効判定 */
+        boolean enabled;
+        XModuleMethod initZygote;
+        XModuleMethod handleLoadPackage;
+        XModuleMethod handleInitPackageResources;
 
         public void d(Object obj) {
             XLog.d(moduleInstance.getClass().getSimpleName(), obj);
@@ -186,6 +271,21 @@ public class XposedModules implements IXposedHookZygoteInit, IXposedHookLoadPack
         public void e(Object obj) {
             XLog.e(moduleInstance.getClass().getSimpleName(), obj);
         }
+    }
+
+    private static class XModuleMethod {
+        @Override
+        public String toString() {
+            return "XModuleMethod [method=" + method + ", minSdkVersion=" + minSdkVersion
+                    + ", targetPackageName=" + targetPackageName + "]";
+        }
+
+        /** 実行メソッド */
+        Method method;
+        /** 最低バージョン */
+        int minSdkVersion = Build.VERSION_CODES.JELLY_BEAN;
+        /** 対象パッケージ名 */
+        List<String> targetPackageName = Collections.emptyList();
     }
 
     @Target(ElementType.METHOD)

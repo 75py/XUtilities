@@ -43,14 +43,14 @@ public abstract class AbstractXposedModule {
         for (Field field : fields) {
             XResource xResource = field.getAnnotation(XResource.class);
             if (xResource != null) {
-                XLog.d("xResource:" + field);
+                // XLog.d("xResource:" + field);
                 try {
                     Class<?> cls = field.getType();
                     Object instance = cls.newInstance();
                     field.setAccessible(true);
                     field.set(this, instance);
                 } catch (Exception e) {
-                    XLog.e("xResource error:" + field + "," + e);
+                     XLog.e("xResource error:" + field + "," + e);
                 }
             }
         }

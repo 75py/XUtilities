@@ -66,11 +66,6 @@ public class ModAppPicker extends AbstractXposedModule implements IXposedHookZyg
 
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
-        if (!mSettings.masterModAppPickerEnable) {
-            // モジュールが無効になっている場合はここで終了
-            return;
-        }
-
         if (mSettings.showAlwaysUse) {
             // 常時のチェックボックス表示
             showAlwaysCheckBox(startupParam);

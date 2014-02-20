@@ -33,10 +33,6 @@ public class ModBrightness extends AbstractXposedModule implements IXposedHookZy
 
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
-        if (!mBrightnessSettings.masterModBrightnessEnable) {
-            return;
-        }
-
         // 最低輝度
         XResources.setSystemWideReplacement("android", "integer", "config_screenBrightnessDim",
                 mBrightnessSettings.minBrightness);

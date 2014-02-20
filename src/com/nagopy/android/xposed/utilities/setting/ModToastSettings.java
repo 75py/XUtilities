@@ -22,8 +22,6 @@ import com.nagopy.android.xposed.utilities.util.Const;
 @XSettings(modulePackageName = Const.PACKAGE_NAME)
 class ModToastSettings {
 
-    public Boolean masterModToastDaoEnable;
-
     public boolean setToastAboveLockscreen;
 
     /** アプリアイコンを表示するかどうか */

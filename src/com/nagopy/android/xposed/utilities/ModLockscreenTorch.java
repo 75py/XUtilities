@@ -54,11 +54,6 @@ public class ModLockscreenTorch extends AbstractXposedModule implements IXposedH
     @XTargetPackage(PACKAGE_KEYGUARD)
     @Override
     public void handleLoadPackage(final LoadPackageParam lpparam) throws Throwable {
-        if (!mLockscreenTorchSettings.masterModLockscreenTorchEnable) {
-            // モジュールが無効の場合は何もしない
-            return;
-        }
-
         // KeyguardStatusViewのクラスを取得
         Class<?> clsKeyguardStatusView = XposedHelpers.findClass(
                 "com.android.keyguard.KeyguardStatusView", lpparam.classLoader);

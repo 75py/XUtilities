@@ -64,11 +64,6 @@ public class ModBatteryIcon extends AbstractXposedModule implements
     @XTargetPackage(XConst.PKG_SYSTEM_UI)
     @Override
     public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
-        if (!mBatteryIconSettings.masterModBatteryIconEnable) {
-            // オフになっている場合は何もしない
-            return;
-        }
-
         if (mBatteryIconSettings.useCircleBatteryIcon) {
             // バッテリーアイコン変更
             Class<?> clsPhoneStatusBarTransitions = XposedHelpers.findClass(
@@ -97,11 +92,6 @@ public class ModBatteryIcon extends AbstractXposedModule implements
     @Override
     public void handleInitPackageResources(
             final InitPackageResourcesParam resparam) throws Throwable {
-        if (!mBatteryIconSettings.masterModBatteryIconEnable) {
-            // オフになっている場合は何もしない
-            return;
-        }
-
         if (mBatteryIconSettings.useCircleBatteryIcon) {
             // バッテリーアイコン変更
             // レイアウトをごにょごにょ
