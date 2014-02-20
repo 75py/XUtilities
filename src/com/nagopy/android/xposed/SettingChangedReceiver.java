@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.nagopy.android.xposed.util.XLog;
 
+import de.robv.android.xposed.XposedBridge;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -37,18 +38,8 @@ public abstract class SettingChangedReceiver extends BroadcastReceiver {
 
     /** 設定保存オブジェクト */
     public final WeakReference<Object> dataObject;
-    /** 対象オブジェクト */
-    @Deprecated
-    public WeakReference<Object> thisObject;
 
     protected SettingChangedReceiver(Object dataObject, String action) {
-        this.dataObject = new WeakReference<Object>(dataObject);
-        this.action = action;
-    }
-
-    @Deprecated
-    protected SettingChangedReceiver(Object thisObject, Object dataObject, String action) {
-        this.thisObject = new WeakReference<Object>(thisObject);
         this.dataObject = new WeakReference<Object>(dataObject);
         this.action = action;
     }
@@ -60,16 +51,13 @@ public abstract class SettingChangedReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        XLog.d(getClass().getSimpleName(), "receiver start");
         Object obj = dataObject.get();
-        XLog.d(getClass().getSimpleName(), obj);
         if (!StringUtils.equals(intent.getAction(), action) || obj == null) {
             context.unregisterReceiver(this);
             return;
         }
 
         Bundle extras = intent.getExtras();
-        XLog.d(getClass().getSimpleName(), extras);
         if (extras == null || extras.size() != 2) {
             return;
         }
@@ -78,15 +66,12 @@ public abstract class SettingChangedReceiver extends BroadcastReceiver {
             // target、valueを取り出し、設定保存オブジェクトに反映する
             String target = extras.getString("target");
             Object value = extras.get("value");
-            XLog.d(getClass().getSimpleName(), target);
-            XLog.d(getClass().getSimpleName(), value);
             obj.getClass().getField(target).set(obj, value);
 
             onDataChanged();
-
-            XLog.d(getClass().getSimpleName(), "receiver finish");
-        } catch (Exception e) {
-            XLog.e(getClass().getSimpleName(), e);
+        } catch (Throwable t) {
+            XLog.e(getClass().getSimpleName(), t);
+            XposedBridge.log(t);
         }
     }
 
