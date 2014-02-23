@@ -208,7 +208,8 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
                         // モジュールの設定を保存
                         updateSettings(mDateView, mClockView, mSettings);
                         // 時計を更新
-                        update(mDateView, mClockView);
+                        // ごにょごにょ直後は何もしない（エラー対策）
+                        // update(mDateView, mClockView);
 
                         // 設定変更をリアルタイムに反映させるためのレシーバーを登録
                         Context context = mClockView.getContext();
