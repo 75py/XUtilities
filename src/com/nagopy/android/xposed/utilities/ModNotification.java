@@ -31,7 +31,6 @@ import android.widget.TextView;
 import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XConst;
 import com.nagopy.android.xposed.util.XUtil;
-import com.nagopy.android.xposed.utilities.XposedModules.XMinSdkVersion;
 import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
 import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
 import com.nagopy.android.xposed.utilities.setting.ModNotificationSettingsGen;
@@ -46,8 +45,6 @@ import de.robv.android.xposed.callbacks.XC_InitPackageResources.InitPackageResou
 import de.robv.android.xposed.callbacks.XC_LayoutInflated;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 
-@XMinSdkVersion(Build.VERSION_CODES.JELLY_BEAN_MR2)
-@TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class ModNotification extends AbstractXposedModule implements IXposedHookLoadPackage,
         IXposedHookInitPackageResources {
 
@@ -130,19 +127,56 @@ public class ModNotification extends AbstractXposedModule implements IXposedHook
     @XTargetPackage(XConst.PKG_SYSTEM_UI)
     @Override
     public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
-        // アイコンだけを非表示にする
-        Class<?> clsStatusBarIcon = XposedHelpers.findClass(
-                "com.android.internal.statusbar.StatusBarIcon", lpparam.classLoader);
-        XposedBridge.hookAllConstructors(clsStatusBarIcon, new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                String iconPackage = (String) XposedHelpers.getObjectField(param.thisObject,
-                        "iconPackage");
-                if (mNotificationSettings.hideNotificationIconPackages.contains(iconPackage)) {
-                    XposedHelpers.setBooleanField(param.thisObject, "visible", false);
-                }
+        // アイコンだけ隠す
+        try {
+            hideNotificationIcon(lpparam);
+        } catch (Throwable t) {
+            log("ERROR(hideNotificationIcon):" + t);
+            XposedBridge.log(t);
+        }
+
+        // 全部隠す
+        try {
+            hideAllNotification(lpparam);
+        } catch (Throwable t) {
+            log("ERROR(hideAllNotification):" + t);
+            XposedBridge.log(t);
+        }
+
+        // 順番を逆にしてみる
+        if (mNotificationSettings.reverseNotificationExpanded) {
+            try {
+                reverseNotification(lpparam);
+            } catch (Throwable t) {
+                log("ERROR(reverseNotification):" + t);
+                XposedBridge.log(t);
             }
-        });// addNotification
+        }
+    }
+
+    public void reverseNotification(LoadPackageParam lpparam) throws Throwable {
+        Class<?> clsNotificationData = XposedHelpers.findClass(
+                "com.android.systemui.statusbar.NotificationData",
+                lpparam.classLoader);
+        XposedHelpers.findAndHookMethod(clsNotificationData, "get", int.class,
+                new XC_MethodReplacement() {
+                    @Override
+                    protected Object replaceHookedMethod(MethodHookParam param)
+                            throws Throwable {
+                        int i = (Integer) param.args[0];
+                        int size = (Integer) XposedHelpers.callMethod(param.thisObject, "size");
+                        return XposedBridge.invokeOriginalMethod(param.method,
+                                param.thisObject,
+                                new Object[] {
+                                    size - i - 1
+                                });
+                    }
+                });
+    }
+
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+    public void hideAllNotification(LoadPackageParam lpparam) throws Throwable {
+        // addNotification
         Class<?> clsPhoneStatusBar = XposedHelpers.findClass(
                 "com.android.systemui.statusbar.phone.PhoneStatusBar", lpparam.classLoader);
         XposedHelpers.findAndHookMethod(clsPhoneStatusBar, "addNotification", IBinder.class,
@@ -159,26 +193,21 @@ public class ModNotification extends AbstractXposedModule implements IXposedHook
                         }
                     }
                 });
+    }
 
-        // 順番を逆にしてみる
-        if (mNotificationSettings.reverseNotificationExpanded) {
-            Class<?> clsNotificationData = XposedHelpers.findClass(
-                    "com.android.systemui.statusbar.NotificationData",
-                    lpparam.classLoader);
-            XposedHelpers.findAndHookMethod(clsNotificationData, "get", int.class,
-                    new XC_MethodReplacement() {
-                        @Override
-                        protected Object replaceHookedMethod(MethodHookParam param)
-                                throws Throwable {
-                            int i = (Integer) param.args[0];
-                            int size = (Integer) XposedHelpers.callMethod(param.thisObject, "size");
-                            return XposedBridge.invokeOriginalMethod(param.method,
-                                    param.thisObject,
-                                    new Object[] {
-                                        size - i - 1
-                                    });
-                        }
-                    });
-        }
+    public void hideNotificationIcon(LoadPackageParam lpparam) throws Throwable {
+        // アイコンだけを非表示にする
+        Class<?> clsStatusBarIcon = XposedHelpers.findClass(
+                "com.android.internal.statusbar.StatusBarIcon", lpparam.classLoader);
+        XposedBridge.hookAllConstructors(clsStatusBarIcon, new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                String iconPackage = (String) XposedHelpers.getObjectField(param.thisObject,
+                        "iconPackage");
+                if (mNotificationSettings.hideNotificationIconPackages.contains(iconPackage)) {
+                    XposedHelpers.setBooleanField(param.thisObject, "visible", false);
+                }
+            }
+        });
     }
 }
