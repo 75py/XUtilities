@@ -20,6 +20,7 @@ import java.util.Set;
 
 import com.nagopy.android.xposed.annotation.XObject;
 import com.nagopy.android.xposed.annotation.XSettings;
+import com.nagopy.android.xposed.annotation.XSettingsHint;
 import com.nagopy.android.xposed.utilities.util.Const;
 
 @XSettings(modulePackageName = Const.PACKAGE_NAME)
@@ -36,5 +37,9 @@ class ModAppPickerSettings {
 
     @XObject
     public AlwaysUsePerAppsList alwaysUsePerApps;
+
+    /** 「常に」をリソースからとっとく */
+    @XSettingsHint(ignore = true)
+    public CharSequence alwaysUse;
 
 }

@@ -25,6 +25,7 @@ import android.content.Context;
 import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.content.res.XModuleResources;
+import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -305,11 +306,8 @@ public class ModStatusBarClock extends AbstractXposedModule implements
             // 色
             clock.setTextColor(clockModDao.statusBarClockTextColor);
             // 配置
-            int gravityVertical = clockModDao.statusBarClockGravityBottom ? Gravity.BOTTOM
-                    : Gravity.CENTER_VERTICAL;
-            int gravityHorizontal = clockModDao.statusBarClockGravityRight ? Gravity.RIGHT
-                    : Gravity.CENTER_HORIZONTAL;
-            clock.setGravity(gravityHorizontal | gravityVertical);
+            int gravity = getGravityFromSettings(clockModDao);
+            clock.setGravity(gravity);
             // フォント
             clock.setTypeface(FontListPreference.makeTypeface(
                     clockModDao.moduleResources.getAssets(),
@@ -336,7 +334,7 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                         || !currentPosition.equals(Const.SB_CLOCK_POSITION_CENTER)) {
                     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
-                            LinearLayout.LayoutParams.WRAP_CONTENT);
+                            LinearLayout.LayoutParams.MATCH_PARENT);
                     params.gravity = Gravity.CENTER;
                     ViewGroup viewSystemIconArea = (ViewGroup) clock.getParent();
                     FrameLayout viewStatusBar = (FrameLayout) ((ViewHolder) clock
@@ -452,6 +450,40 @@ public class ModStatusBarClock extends AbstractXposedModule implements
      */
     private static void updateClock(TextView clock) {
         XposedHelpers.callMethod(clock, "updateClock");
+    }
+
+    /**
+     * 設定値をGravityの値に変換して返す.
+     * 
+     * @param settings 設定
+     * @return {@link Gravity}
+     */
+    private static int getGravityFromSettings(ModStatusBarClockSettingsGen settings) {
+        int gravity = Gravity.NO_GRAVITY;
+
+        String horizontal = settings.statusBarClockGravityHorizontal;
+        if (!TextUtils.isEmpty(horizontal)) {
+            if (horizontal.equals(Const.SB_CLOCK_GRAVITY_CENTER_HORIZONTAL)) {
+                gravity |= Gravity.CENTER_HORIZONTAL;
+            } else if (horizontal.equals(Const.SB_CLOCK_GRAVITY_LEFT)) {
+                gravity |= Gravity.LEFT;
+            } else if (horizontal.equals(Const.SB_CLOCK_GRAVITY_RIGHT)) {
+                gravity |= Gravity.RIGHT;
+            }
+        }
+
+        String vertical = settings.statusBarClockGravityVertical;
+        if (!TextUtils.isEmpty(vertical)) {
+            if (vertical.equals(Const.SB_CLOCK_GRAVITY_CENTER_VERTICAL)) {
+                gravity |= Gravity.CENTER_VERTICAL;
+            } else if (vertical.equals(Const.SB_CLOCK_GRAVITY_TOP)) {
+                gravity |= Gravity.TOP;
+            } else if (vertical.equals(Const.SB_CLOCK_GRAVITY_BOTTOM)) {
+                gravity |= Gravity.BOTTOM;
+            }
+        }
+
+        return gravity;
     }
 
 }

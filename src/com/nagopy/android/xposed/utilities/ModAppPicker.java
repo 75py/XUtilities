@@ -90,6 +90,12 @@ public class ModAppPicker extends AbstractXposedModule implements IXposedHookZyg
         } else {
             resourceName = "resolver_grid";
         }
+
+        XModuleResources moduleResources = XModuleResources.createInstance(
+                startupParam.modulePath, null);
+        CharSequence alwaysUse = moduleResources.getText(R.string.alwaysUse);
+        mSettings.alwaysUse = alwaysUse;
+
         XResources.hookSystemWideLayout("android", "layout", resourceName,
                 new XC_LayoutInflated() {
                     @Override
@@ -118,9 +124,7 @@ public class ModAppPicker extends AbstractXposedModule implements IXposedHookZyg
                         // チェックボックスを作成
                         CheckBox checkBox = new CheckBox(context);
                         checkBox.setChecked(false);
-                        XModuleResources moduleResources = XModuleResources.createInstance(
-                                startupParam.modulePath, null);
-                        checkBox.setText(moduleResources.getText(R.string.alwaysUse));
+                        checkBox.setText(mSettings.alwaysUse);
 
                         // LayoutParamsを作成
                         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(

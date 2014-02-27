@@ -54,9 +54,10 @@ class ModStatusBarClockSettings {
     /** Localeを英語にするか */
     public boolean statusBarClockForceEnglish;
 
-    public boolean statusBarClockGravityBottom;
-
-    public boolean statusBarClockGravityRight;
+    @XStringDefaultValue(Const.SB_CLOCK_GRAVITY_CENTER_VERTICAL)
+    public String statusBarClockGravityVertical;
+    @XStringDefaultValue(Const.SB_CLOCK_GRAVITY_CENTER_HORIZONTAL)
+    public String statusBarClockGravityHorizontal;
 
     // ----------------------------------------------
     // ----------------------------------------------
