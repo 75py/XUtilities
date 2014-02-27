@@ -87,6 +87,8 @@ public class XposedModules implements IXposedHookZygoteInit, IXposedHookLoadPack
                     Object settings = field.getType().getConstructor().newInstance();
                     field.setAccessible(true);
                     field.set(info.moduleInstance, settings);
+
+                    XLog.d(settings.getClass().getSimpleName(), settings);
                 }
             }
 
