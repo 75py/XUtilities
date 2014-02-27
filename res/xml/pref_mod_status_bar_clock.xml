@@ -46,21 +46,20 @@
         android:key="status_bar_clock_typeface"
         android:title="@string/title_status_bar_clock_typeface" />
 
-    <CheckBoxPreference
-        android:defaultValue="false"
+    <com.nagopy.android.common.pref.ListPreference
+        android:defaultValue="CENTER_VERTICAL"
         android:dependency="master_mod_status_bar_enable"
-        android:key="status_bar_clock_gravity_bottom"
-        android:summaryOff="CENTER_VERTICAL"
-        android:summaryOn="BOTTOM"
-        android:title="@string/title_status_bar_clock_gravity_bottom" />
-    <CheckBoxPreference
-        android:defaultValue="false"
+        android:entries="@array/status_bar_clock_gravity_vertical_name"
+        android:entryValues="@array/status_bar_clock_gravity_vertical_value"
+        android:key="status_bar_clock_gravity_vertical"
+        android:title="@string/title_status_bar_clock_gravity_vertical" />
+    <com.nagopy.android.common.pref.ListPreference
+        android:defaultValue="CENTER_HORIZONTAL"
         android:dependency="master_mod_status_bar_enable"
-        android:key="status_bar_clock_gravity_right"
-        android:summaryOff="CENTER_HORIZONTAL"
-        android:summaryOn="RIGHT"
-        android:title="@string/title_status_bar_clock_gravity_right" />
-
+        android:entries="@array/status_bar_clock_gravity_horizontal_name"
+        android:entryValues="@array/status_bar_clock_gravity_horizontal_value"
+        android:key="status_bar_clock_gravity_horizontal"
+        android:title="@string/title_status_bar_clock_gravity_horizontal" />
     <com.nagopy.android.common.pref.ListPreference
         android:defaultValue="default"
         android:dependency="master_mod_status_bar_enable"

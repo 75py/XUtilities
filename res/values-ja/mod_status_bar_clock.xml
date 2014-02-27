@@ -7,8 +7,6 @@
     <string name="title_status_bar_clock_text_color">文字色</string>
     <string name="title_status_bar_clock_format">フォーマット</string>
     <string name="title_status_bar_clock_force_english">英語表記</string>
-    <string name="title_status_bar_clock_gravity_bottom">Gravity(vertical)</string>
-    <string name="title_status_bar_clock_gravity_right">Gravity(horizontal)</string>
     <string name="title_status_bar_clock_typeface">フォント</string>
 
     <!-- header -->

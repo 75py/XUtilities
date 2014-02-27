@@ -129,8 +129,8 @@ public class PrefActivity extends PreferenceActivity implements OnSharedPreferen
             case R.string.title_status_bar_clock_text_color:
             case R.string.title_status_bar_clock_force_english:
             case R.string.title_status_bar_clock_format:
-            case R.string.title_status_bar_clock_gravity_bottom:
-            case R.string.title_status_bar_clock_gravity_right:
+            case R.string.title_status_bar_clock_gravity_horizontal:
+            case R.string.title_status_bar_clock_gravity_vertical:
             case R.string.title_status_bar_clock_position:
                 intent.setAction(Const.ACTION_STATUS_BAR_CLOCK_SETTING_CHANGED);
                 break;

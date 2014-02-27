@@ -16,6 +16,7 @@
 
 package com.nagopy.android.xposed.utilities.util;
 
+
 /**
  * 定数クラス.
  */
@@ -55,4 +56,11 @@ public class Const {
 
     public static final String ADDITIONAL_DATE_FORMAT = "ADDITIONAL_DATE_FORMAT";
 
+    // ステータスバー時計のGravity
+    public static final String SB_CLOCK_GRAVITY_RIGHT = "RIGHT";
+    public static final String SB_CLOCK_GRAVITY_CENTER_HORIZONTAL = "CENTER_HORIZONTAL";
+    public static final String SB_CLOCK_GRAVITY_LEFT = "LEFT";
+    public static final String SB_CLOCK_GRAVITY_TOP = "TOP";
+    public static final String SB_CLOCK_GRAVITY_CENTER_VERTICAL = "CENTER_VERTICAL";
+    public static final String SB_CLOCK_GRAVITY_BOTTOM = "BOTTOM";
 }

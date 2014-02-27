@@ -7,14 +7,14 @@
     <string name="title_status_bar_clock_text_color">Color</string>
     <string name="title_status_bar_clock_format">Format</string>
     <string name="title_status_bar_clock_force_english">Force English</string>
-    <string name="title_status_bar_clock_gravity_bottom">Gravity(vertical)</string>
-    <string name="title_status_bar_clock_gravity_right">Gravity(horizontal)</string>
     <string name="title_status_bar_clock_typeface">Font</string>
 
     <!-- header -->
     <string name="header_status_bar_clock">Statusbar clock settings.\nWhile this module is enabled, the changes will be applied immediately.</string>
     <!-- 表示位置 -->
     <string name="title_status_bar_clock_position">Position</string>
+    <string name="title_status_bar_clock_gravity_vertical">Gravity(vertical)</string>
+    <string name="title_status_bar_clock_gravity_horizontal">Gravity(horizontal)</string>
 
     <string-array name="status_bar_clock_position_name">
         <item>Default</item>
@@ -25,6 +25,26 @@
         <item>default</item>
         <item>center</item>
         <item>left</item>
+    </string-array>
+    <string-array name="status_bar_clock_gravity_vertical_name">
+        <item>Center</item>
+        <item>Top</item>
+        <item>Bottom</item>
+    </string-array>
+    <string-array name="status_bar_clock_gravity_vertical_value">
+        <item>CENTER_VERTICAL</item>
+        <item>TOP</item>
+        <item>BOTTOM</item>
+    </string-array>
+    <string-array name="status_bar_clock_gravity_horizontal_name">
+        <item>Center</item>
+        <item>Right</item>
+        <item>Left</item>
+    </string-array>
+    <string-array name="status_bar_clock_gravity_horizontal_value">
+        <item>CENTER_HORIZONTAL</item>
+        <item>RIGHT</item>
+        <item>LEFT</item>
     </string-array>
 
 </resources>
