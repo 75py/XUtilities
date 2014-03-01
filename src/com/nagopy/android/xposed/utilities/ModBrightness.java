@@ -21,27 +21,29 @@ import org.apache.commons.lang3.StringUtils;
 import android.content.res.XResources;
 
 import com.nagopy.android.common.util.VersionUtil;
-import com.nagopy.android.xposed.AbstractXposedModule;
-import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
+import com.nagopy.android.xposed.utilities.XposedModules.InitZygote;
+import com.nagopy.android.xposed.utilities.XposedModules.XposedModule;
 import com.nagopy.android.xposed.utilities.setting.ModBrightnessSettingsGen;
 
-import de.robv.android.xposed.IXposedHookZygoteInit;
+import de.robv.android.xposed.IXposedHookZygoteInit.StartupParam;
 
-public class ModBrightness extends AbstractXposedModule implements IXposedHookZygoteInit {
+@XposedModule(setting = ModBrightnessSettingsGen.class)
+public class ModBrightness {
 
-    @XModuleSettings
-    private ModBrightnessSettingsGen mBrightnessSettings;
-
-    @Override
-    public void initZygote(StartupParam startupParam) throws Throwable {
-        // 最低輝度
+    @InitZygote(summary = "最低輝度")
+    public static void minBrightness(StartupParam startupParam,
+            ModBrightnessSettingsGen mBrightnessSettings) throws Throwable {
         XResources.setSystemWideReplacement("android", "integer", "config_screenBrightnessDim",
                 mBrightnessSettings.minBrightness);
         if (VersionUtil.isJBmr1OrLater()) {
             XResources.setSystemWideReplacement("android", "integer",
                     "config_screenBrightnessSettingMinimum", mBrightnessSettings.minBrightness);
         }
+    }
 
+    @InitZygote(summary = "自動輝度調整")
+    public static void initZygote(StartupParam startupParam,
+            ModBrightnessSettingsGen mBrightnessSettings) throws Throwable {
         // 自動輝度調整
         if (StringUtils.isNotEmpty(mBrightnessSettings.configAutoBrightnessLevels)
                 && StringUtils
@@ -69,7 +71,7 @@ public class ModBrightness extends AbstractXposedModule implements IXposedHookZy
      * @param value カンマ区切り数値
      * @return int配列
      */
-    private int[] makeIntArray(String value) {
+    private static int[] makeIntArray(String value) {
         String[] split = value.split(",");
         int length = split.length;
         int[] array = new int[length];

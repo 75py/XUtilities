@@ -32,17 +32,16 @@ import android.widget.TextClock;
 import android.widget.TextView;
 
 import com.nagopy.android.common.pref.FontListPreference;
-import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.SettingChangedReceiver;
 import com.nagopy.android.xposed.util.XUtil;
+import com.nagopy.android.xposed.utilities.XposedModules.HandleInitPackageResources;
+import com.nagopy.android.xposed.utilities.XposedModules.InitZygote;
 import com.nagopy.android.xposed.utilities.XposedModules.XMinSdkVersion;
-import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
-import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
+import com.nagopy.android.xposed.utilities.XposedModules.XposedModule;
 import com.nagopy.android.xposed.utilities.setting.ModLockscreenClockSettingsGen;
 import com.nagopy.android.xposed.utilities.util.Const;
 
-import de.robv.android.xposed.IXposedHookInitPackageResources;
-import de.robv.android.xposed.IXposedHookZygoteInit;
+import de.robv.android.xposed.IXposedHookZygoteInit.StartupParam;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedHelpers;
@@ -52,30 +51,18 @@ import de.robv.android.xposed.callbacks.XC_LayoutInflated;
 /**
  * ロックスクリーンの時計をカスタマイズするモジュール.
  */
+@XposedModule(setting = ModLockscreenClockSettingsGen.class)
 @XMinSdkVersion(Build.VERSION_CODES.JELLY_BEAN_MR1)
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-public class ModLockscreenClock extends AbstractXposedModule implements
-        IXposedHookZygoteInit, IXposedHookInitPackageResources {
-
-    private static final String ADDITIONAL_FORMAT = Const.ADDITIONAL_DATE_FORMAT;
-
-    private String modulePath;
-
-    @XModuleSettings
-    private ModLockscreenClockSettingsGen mSettings;
+public class ModLockscreenClock {
 
     /** キーガードのパッケージ名 */
     private static final String PACKAGE_KEYGUARD = "com.android.keyguard";
 
-    @Override
-    public void initZygote(StartupParam startupParam) throws Throwable {
-        // マスタも随時反映の対象なので、無効であっても処理は続行する
-        // if (!mSettings.masterModLockscreenClockEnable) {
-        // // モジュールが無効になっている場合は何もしない
-        // return;
-        // }
-
-        modulePath = startupParam.modulePath;
+    @InitZygote
+    public static void initZygote(
+            StartupParam startupParam,
+            ModLockscreenClockSettingsGen mSettings) throws Throwable {
 
         // chooseFormatをフック
         // フォーマットに「秒がある場合は秒更新を行う」ロジックがもともとあるので、それを使用するため
@@ -85,7 +72,8 @@ public class ModLockscreenClock extends AbstractXposedModule implements
                     protected void beforeHookedMethod(MethodHookParam param)
                             throws Throwable {
                         Object format = XposedHelpers
-                                .getAdditionalInstanceField(param.thisObject, ADDITIONAL_FORMAT);
+                                .getAdditionalInstanceField(param.thisObject,
+                                        Const.ADDITIONAL_DATE_FORMAT);
                         if (format == null) {
                             // 追加フィールドがない場合は何もしない
                             return;
@@ -107,7 +95,7 @@ public class ModLockscreenClock extends AbstractXposedModule implements
                             throws Throwable {
                         Object format = XposedHelpers
                                 .getAdditionalInstanceField(param.thisObject,
-                                        ADDITIONAL_FORMAT);
+                                        Const.ADDITIONAL_DATE_FORMAT);
                         if (format == null) {
                             // 追加フィールドがない場合は通常の処理を実行
                             return XUtil.invokeOriginalMethod(param);
@@ -125,16 +113,12 @@ public class ModLockscreenClock extends AbstractXposedModule implements
                 });
     }
 
-    @XTargetPackage(PACKAGE_KEYGUARD)
-    @Override
-    public void handleInitPackageResources(
-            final InitPackageResourcesParam resparam) throws Throwable {
-        // マスタも随時反映の対象なので、無効であっても処理は続行する
-        // if (!mSettings.masterModLockscreenClockEnable) {
-        // // モジュールが無効になっている場合は何もしない
-        // return;
-        // }
-
+    @HandleInitPackageResources(targetPackage = PACKAGE_KEYGUARD)
+    public static void handleInitPackageResources(
+            final String modulePath,
+            final InitPackageResourcesParam resparam,
+            final ModLockscreenClockSettingsGen mSettings
+            ) throws Throwable {
         // レイアウトをごにょごにょ
         resparam.res.hookLayout(PACKAGE_KEYGUARD, "layout",
                 "keyguard_status_view", new XC_LayoutInflated() {
@@ -213,7 +197,8 @@ public class ModLockscreenClock extends AbstractXposedModule implements
             SimpleDateFormat timeFormat = new SimpleDateFormat(
                     setting.lockscreenClockTimeFormat,
                     setting.lockscreenClockTimeForceEnglish ? Locale.ENGLISH : Locale.getDefault());
-            XposedHelpers.setAdditionalInstanceField(mClockView, ADDITIONAL_FORMAT, timeFormat);
+            XposedHelpers.setAdditionalInstanceField(mClockView, Const.ADDITIONAL_DATE_FORMAT,
+                    timeFormat);
 
             // 日付の文字サイズ、色、フォント、フォーマットをセット
             mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
@@ -228,19 +213,20 @@ public class ModLockscreenClock extends AbstractXposedModule implements
             SimpleDateFormat dateFormat = new SimpleDateFormat(
                     setting.lockscreenClockDateFormat,
                     setting.lockscreenClockDateForceEnglish ? Locale.ENGLISH : Locale.getDefault());
-            XposedHelpers.setAdditionalInstanceField(mDateView, ADDITIONAL_FORMAT, dateFormat);
+            XposedHelpers.setAdditionalInstanceField(mDateView, Const.ADDITIONAL_DATE_FORMAT,
+                    dateFormat);
         } else { // モジュール無効の場合
             // 時計のデフォルト設定を反映
             mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX, setting.defaultTimeTextSize);
             mClockView.setTextColor(setting.defaultTimeTextColor);
             mClockView.setTypeface(setting.defaultTimeTypeface);
-            XposedHelpers.removeAdditionalInstanceField(mClockView, ADDITIONAL_FORMAT);
+            XposedHelpers.removeAdditionalInstanceField(mClockView, Const.ADDITIONAL_DATE_FORMAT);
 
             // 日付のデフォルト設定を反映
             mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX, setting.defaultDateTextSize);
             mDateView.setTextColor(setting.defaultDateTextColor);
             mDateView.setTypeface(setting.defaultDateTypeface);
-            XposedHelpers.removeAdditionalInstanceField(mDateView, ADDITIONAL_FORMAT);
+            XposedHelpers.removeAdditionalInstanceField(mDateView, Const.ADDITIONAL_DATE_FORMAT);
         }
     }
 

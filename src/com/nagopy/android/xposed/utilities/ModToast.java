@@ -33,12 +33,12 @@ import com.nagopy.android.common.util.DimenUtil;
 import com.nagopy.android.common.util.ImageUtil;
 import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.common.util.ViewUtil;
-import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XUtil;
-import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
+import com.nagopy.android.xposed.utilities.XposedModules.InitZygote;
+import com.nagopy.android.xposed.utilities.XposedModules.XposedModule;
 import com.nagopy.android.xposed.utilities.setting.ModToastSettingsGen;
 
-import de.robv.android.xposed.IXposedHookZygoteInit;
+import de.robv.android.xposed.IXposedHookZygoteInit.StartupParam;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedBridge;
@@ -47,13 +47,85 @@ import de.robv.android.xposed.XposedHelpers;
 /**
  * {@link Toast}をロックスクリーン上よりも上位レイヤーに表示させるモジュール.
  */
-public class ModToast extends AbstractXposedModule implements IXposedHookZygoteInit {
+@XposedModule(setting = ModToastSettingsGen.class)
+public class ModToast {
 
-    @XModuleSettings
-    private ModToastSettingsGen mToastSettings;
+    @InitZygote(summary = "トースト アプリアイコン表示")
+    public static void showAppIcon(
+            StartupParam startupParam,
+            final ModToastSettingsGen mToastSettings
+            ) throws Throwable {
+        if (!mToastSettings.toastShowAppIcon) {
+            return;
+        }
 
-    @Override
-    public void initZygote(StartupParam startupParam) throws Throwable {
+        // show前にViewをごにょごにょ
+        XposedHelpers.findAndHookMethod(Toast.class, "show", new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                View mNextView = (View) XposedHelpers.getObjectField(param.thisObject, "mNextView");
+                Context context = mNextView.getContext();
+
+                // LinearLayoutの場合
+                if (mNextView instanceof LinearLayout) {
+                    LinearLayout originalLL = (LinearLayout) mNextView;
+
+                    if (originalLL.getOrientation() == LinearLayout.HORIZONTAL) {
+                        // LinearLayout横配置の場合
+                        // たぶん、カスタムレイアウト
+
+                        // TODO どーする？何もしないでおｋ？
+                    } else {
+                        // LinearLayout縦配置の場合
+                        // たぶん、デフォルトのレイアウト
+                        // ほんとにデフォルトか確認
+                        if (originalLL.getChildCount() == 1) {
+                            // 子View一個かを確認
+                            View childAt = originalLL.getChildAt(0);
+                            if (childAt.getId() == android.R.id.message
+                                    && childAt instanceof TextView) {
+                                // 子View一個、idがmessage、TextView
+                                // ここまで厳密にやつ必要あるか疑問だが……
+
+                                // アイコン取得
+                                Drawable icon = ImageUtil.getApplicationIcon(context,
+                                        context.getPackageName());
+                                if (icon != null) {
+                                    // アイコンサイズをセット
+                                    int iconSize = ImageUtil.getIconSize(context);
+                                    icon.setBounds(0, 0, iconSize, iconSize);
+                                    // アイコンをセット
+                                    TextView messageTextView = (TextView) childAt;
+                                    ViewUtil.setCompoundDrawablesRelative(messageTextView, icon,
+                                            null, null, null);
+                                    // 余白設定
+                                    messageTextView.setCompoundDrawablePadding(DimenUtil
+                                            .getPixelFromDp(context, 4));
+                                    // 文字を中央になるよう調整
+                                    messageTextView.setGravity(Gravity.CENTER_VERTICAL);
+                                }
+                            } else {
+                                // 子View一個のLinearLayoutだが、TextViewじゃないらしい
+                                // TODO どーする？
+                            }
+                        } else {
+                            // 子Viewが二個以上
+                            // TODO 何かするべき？
+                        }
+                    }
+                } else {
+                    // LinearLayout以外の場合
+                    // まず間違いなくカスタムレイアウト
+
+                    // TODO どうする？何もしない？
+                }
+            }
+        });
+    }
+
+    @InitZygote(summary = "トーストレイヤー変更")
+    public static void setToastAboceLockscreen(StartupParam startupParam,
+            final ModToastSettingsGen mToastSettings) throws Throwable {
         if (!mToastSettings.setToastAboveLockscreen) {
             return;
         }
@@ -118,73 +190,11 @@ public class ModToast extends AbstractXposedModule implements IXposedHookZygoteI
             XposedHelpers.findAndHookMethod(clsPhoneWindowManager, "checkAddPermission",
                     WindowManager.LayoutParams.class, checkAddPermissionReplacement);
         }
+    }
 
-        // show前にViewをごにょごにょ
-        XposedHelpers.findAndHookMethod(Toast.class, "show", new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                View mNextView = (View) XposedHelpers.getObjectField(param.thisObject, "mNextView");
-                Context context = mNextView.getContext();
-
-                // LinearLayoutの場合
-                if (mNextView instanceof LinearLayout) {
-                    LinearLayout originalLL = (LinearLayout) mNextView;
-
-                    if (originalLL.getOrientation() == LinearLayout.HORIZONTAL) {
-                        log("is HORIZONTAL!");
-                        // LinearLayout横配置の場合
-                        // たぶん、カスタムレイアウト
-
-                        // TODO どーする？何もしないでおｋ？
-                    } else {
-                        log("is not HORIZONTAL!");
-                        // LinearLayout縦配置の場合
-                        // たぶん、デフォルトのレイアウト
-                        // ほんとにデフォルトか確認
-                        if (originalLL.getChildCount() == 1) {
-                            // 子View一個かを確認
-                            View childAt = originalLL.getChildAt(0);
-                            if (childAt.getId() == android.R.id.message
-                                    && childAt instanceof TextView) {
-                                // 子View一個、idがmessage、TextView
-                                // ここまで厳密にやつ必要あるか疑問だが……
-
-                                // アイコン取得
-                                Drawable icon = ImageUtil.getApplicationIcon(context,
-                                        context.getPackageName());
-                                if (icon != null) {
-                                    // アイコンサイズをセット
-                                    int iconSize = ImageUtil.getIconSize(context);
-                                    icon.setBounds(0, 0, iconSize, iconSize);
-                                    // アイコンをセット
-                                    TextView messageTextView = (TextView) childAt;
-                                    ViewUtil.setCompoundDrawablesRelative(messageTextView, icon,
-                                            null, null, null);
-                                    // 余白設定
-                                    messageTextView.setCompoundDrawablePadding(DimenUtil
-                                            .getPixelFromDp(context, 4));
-                                    // 文字を中央になるよう調整
-                                    messageTextView.setGravity(Gravity.CENTER_VERTICAL);
-                                }
-                            } else {
-                                // 子View一個のLinearLayoutだが、TextViewじゃないらしい
-                                // TODO どーする？
-                            }
-                        } else {
-                            // 子Viewが二個以上
-                            // TODO 何かするべき？
-                        }
-                    }
-                } else {
-                    log("is not LinearLayout!");
-                    // LinearLayout以外の場合
-                    // まず間違いなくカスタムレイアウト
-
-                    // TODO どうする？何もしない？
-                }
-            }
-        });
-
+    @InitZygote(summary = "トースト表示時間変更")
+    public static void setToastDuration(StartupParam startupParam,
+            final ModToastSettingsGen mToastSettings) throws Throwable {
         // 表示時間調整
         Class<?> clsNotificationManagerService = XposedHelpers.findClass(
                 "com.android.server.NotificationManagerService",

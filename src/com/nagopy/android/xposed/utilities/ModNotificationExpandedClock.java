@@ -34,20 +34,16 @@ import android.widget.TextView;
 
 import com.nagopy.android.common.pref.FontListPreference;
 import com.nagopy.android.common.util.VersionUtil;
-import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.SettingChangedReceiver;
 import com.nagopy.android.xposed.util.XConst;
-import com.nagopy.android.xposed.util.XLog;
 import com.nagopy.android.xposed.util.XUtil;
+import com.nagopy.android.xposed.utilities.XposedModules.HandleInitPackageResources;
+import com.nagopy.android.xposed.utilities.XposedModules.HandleLoadPackage;
 import com.nagopy.android.xposed.utilities.XposedModules.XMinSdkVersion;
-import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
-import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
+import com.nagopy.android.xposed.utilities.XposedModules.XposedModule;
 import com.nagopy.android.xposed.utilities.setting.ModNotificationExpandedClockSettingsGen;
 import com.nagopy.android.xposed.utilities.util.Const;
 
-import de.robv.android.xposed.IXposedHookInitPackageResources;
-import de.robv.android.xposed.IXposedHookLoadPackage;
-import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedBridge;
@@ -61,36 +57,15 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
  */
 @XMinSdkVersion(Build.VERSION_CODES.JELLY_BEAN_MR1)
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-public class ModNotificationExpandedClock extends AbstractXposedModule implements
-        IXposedHookZygoteInit, IXposedHookLoadPackage, IXposedHookInitPackageResources {
+@XposedModule(setting = ModNotificationExpandedClockSettingsGen.class)
+public class ModNotificationExpandedClock {
 
-    private static final String ADDITIONAL_FORMAT = Const.ADDITIONAL_DATE_FORMAT;
-
-    private String modulePath;
-
-    @XModuleSettings
-    private ModNotificationExpandedClockSettingsGen mSettings;
-
-    @Override
-    public void initZygote(StartupParam startupParam) throws Throwable {
-        // マスタも随時反映の対象なので、無効であっても処理は続行する
-        // if (!mSettings.masterModNotificationExpandedClockEnable) {
-        // // モジュールが無効なら何もしない
-        // return;
-        // }
-
-        modulePath = startupParam.modulePath;
-    }
-
-    @XTargetPackage(XConst.PKG_SYSTEM_UI)
-    @Override
-    public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
-        // マスタも随時反映の対象なので、無効であっても処理は続行する
-        // if (!mSettings.masterModNotificationExpandedClockEnable) {
-        // // モジュールが無効なら何もしない
-        // return;
-        // }
-
+    @HandleLoadPackage(targetPackage = XConst.PKG_SYSTEM_UI)
+    public static void handleLoadPackage(
+            String modulePath,
+            LoadPackageParam lpparam,
+            ModNotificationExpandedClockSettingsGen mSettings)
+            throws Throwable {
         // Clockのクラスを取得
         final Class<?> clockClass = XposedHelpers.findClass(
                 "com.android.systemui.statusbar.policy.Clock", lpparam.classLoader);
@@ -103,7 +78,7 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
                             throws Throwable {
                         Object additionalInstanceField = XposedHelpers
                                 .getAdditionalInstanceField(param.thisObject,
-                                        ADDITIONAL_FORMAT);
+                                        Const.ADDITIONAL_DATE_FORMAT);
                         if (additionalInstanceField == null) {
                             // モジュールで追加した値がない場合は元のメソッドを実行
                             return XUtil.invokeOriginalMethod(param);
@@ -132,7 +107,7 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
 
                         Object additionalInstanceField = XposedHelpers
                                 .getAdditionalInstanceField(param.thisObject,
-                                        ADDITIONAL_FORMAT);
+                                        Const.ADDITIONAL_DATE_FORMAT);
                         if (additionalInstanceField == null) {
                             // モジュールで追加した値がない場合は元のメソッドを実行
                             return;
@@ -151,7 +126,7 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
                 protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
                     Object additionalInstanceField = XposedHelpers
                             .getAdditionalInstanceField(param.thisObject,
-                                    ADDITIONAL_FORMAT);
+                                    Const.ADDITIONAL_DATE_FORMAT);
                     if (additionalInstanceField == null) {
                         // モジュールで追加した値がない場合は元のメソッドを実行
                         return XUtil.invokeOriginalMethod(param);
@@ -167,9 +142,11 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
         }
     }
 
-    @XTargetPackage(XConst.PKG_SYSTEM_UI)
-    @Override
-    public void handleInitPackageResources(final InitPackageResourcesParam resparam)
+    @HandleInitPackageResources(targetPackage = XConst.PKG_SYSTEM_UI)
+    public static void handleInitPackageResources(
+            final String modulePath,
+            final InitPackageResourcesParam resparam,
+            final ModNotificationExpandedClockSettingsGen mSettings)
             throws Throwable {
         // レイアウトをごにょごにょ
         resparam.res.hookLayout(XConst.PKG_SYSTEM_UI, "layout",
@@ -236,9 +213,6 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
 
             XposedHelpers.callMethod(mClockView, "updateClock");
         } catch (Throwable t) {
-            XLog.e(ModNotificationExpandedClock.class.getSimpleName(), t + ", " + mDateView
-                    + ", "
-                    + mClockView);
             XposedBridge.log(t);
         }
     }
@@ -269,7 +243,7 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
                     setting.notificationExpandedClockTimeForceEnglish ? Locale.ENGLISH
                             : Locale.getDefault());
             XposedHelpers.setAdditionalInstanceField(mClockView,
-                    ADDITIONAL_FORMAT, timeFormat);
+                    Const.ADDITIONAL_DATE_FORMAT, timeFormat);
 
             // 日付の文字サイズ、色、フォント、フォーマットをセット
             mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
@@ -287,7 +261,7 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
                     setting.notificationExpandedClockDateForceEnglish ? Locale.ENGLISH
                             : Locale.getDefault());
             XposedHelpers.setAdditionalInstanceField(mDateView,
-                    ADDITIONAL_FORMAT, dateFormat);
+                    Const.ADDITIONAL_DATE_FORMAT, dateFormat);
         } else {
             // モジュール無効の場合
             // 時計のデフォルト設定を反映
@@ -296,7 +270,7 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
             mClockView.setTextColor(setting.defaultTimeTextColor);
             mClockView.setTypeface(setting.defaultTimeTypeface);
             XposedHelpers.removeAdditionalInstanceField(mClockView,
-                    ADDITIONAL_FORMAT);
+                    Const.ADDITIONAL_DATE_FORMAT);
 
             // 日付のデフォルト設定を反映
             mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
@@ -304,7 +278,7 @@ public class ModNotificationExpandedClock extends AbstractXposedModule implement
             mDateView.setTextColor(setting.defaultDateTextColor);
             mDateView.setTypeface(setting.defaultDateTypeface);
             XposedHelpers.removeAdditionalInstanceField(mDateView,
-                    ADDITIONAL_FORMAT);
+                    Const.ADDITIONAL_DATE_FORMAT);
         }
     }
 

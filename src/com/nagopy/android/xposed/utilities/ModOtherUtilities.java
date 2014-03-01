@@ -19,42 +19,46 @@ package com.nagopy.android.xposed.utilities;
 import android.app.KeyguardManager;
 import android.content.Context;
 import android.content.res.XResources;
+import android.os.Build;
 import android.view.KeyEvent;
 
 import com.nagopy.android.common.util.VersionUtil;
-import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XConst;
 import com.nagopy.android.xposed.util.XUtil;
-import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
-import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
+import com.nagopy.android.xposed.utilities.XposedModules.HandleLoadPackage;
+import com.nagopy.android.xposed.utilities.XposedModules.InitZygote;
+import com.nagopy.android.xposed.utilities.XposedModules.XposedModule;
+import com.nagopy.android.xposed.utilities.XposedModules.XMinSdkVersion;
 import com.nagopy.android.xposed.utilities.setting.ModOtherUtilitiesSettingsGen;
 
-import de.robv.android.xposed.IXposedHookLoadPackage;
-import de.robv.android.xposed.IXposedHookZygoteInit;
+import de.robv.android.xposed.IXposedHookZygoteInit.StartupParam;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 
-public class ModOtherUtilities extends AbstractXposedModule implements IXposedHookZygoteInit,
-        IXposedHookLoadPackage {
+@XposedModule(setting = ModOtherUtilitiesSettingsGen.class)
+public class ModOtherUtilities {
 
-    @XModuleSettings
-    private ModOtherUtilitiesSettingsGen mOtherUtilitiesSettings;
-
-    @Override
-    public void initZygote(StartupParam startupParam) throws Throwable {
-        // IME通知表示有無
+    @InitZygote(summary = "IME通知表示有無")
+    public static void setShowOngoingImeSwitcher(StartupParam startupParam,
+            ModOtherUtilitiesSettingsGen mOtherUtilitiesSettings) throws Throwable {
         XResources.setSystemWideReplacement("android", "bool", "show_ongoing_ime_switcher",
                 mOtherUtilitiesSettings.showOngoingImeSwitcher);
+    }
 
-        // ActionMenuのテキスト表示
+    @InitZygote(summary = "ActionMenuのテキスト表示")
+    public static void setConfigAllowActionMenuItemTextWithIcon(StartupParam startupParam,
+            ModOtherUtilitiesSettingsGen mOtherUtilitiesSettings) throws Throwable {
         XResources.setSystemWideReplacement("android", "bool",
                 "config_allowActionMenuItemTextWithIcon",
                 mOtherUtilitiesSettings.configAllowActionMenuItemTextWithIcon);
+    }
 
-        // カメラ シャッター音
+    @InitZygote(summary = "カメラ シャッター音")
+    public static void setConfigCameraSoundForced(StartupParam startupParam,
+            ModOtherUtilitiesSettingsGen mOtherUtilitiesSettings) throws Throwable {
         if (VersionUtil.isJBmr1OrLater()) {
             XResources.setSystemWideReplacement("android", "bool", "config_camera_sound_forced",
                     mOtherUtilitiesSettings.configCameraSoundForced);
@@ -88,9 +92,40 @@ public class ModOtherUtilities extends AbstractXposedModule implements IXposedHo
         }
     }
 
-    @XTargetPackage(XConst.PKG_SYSTEM_UI)
-    @Override
-    public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
+    @InitZygote(summary = "音量ボタンでスリープ復帰")
+    @XMinSdkVersion(Build.VERSION_CODES.JELLY_BEAN_MR1)
+    public static void volumeRockerWake(StartupParam startupParam,
+            ModOtherUtilitiesSettingsGen mOtherUtilitiesSettings) throws Throwable {
+        if (!mOtherUtilitiesSettings.volumeRockerWake) {
+            return;
+        }
+
+        // PhoneWindowManagerのクラスを取得
+        Class<?> phoneWindowManager = XposedHelpers.findClass(
+                "com.android.internal.policy.impl.PhoneWindowManager", null);
+        // isWakeKeyWhenScreenOffを書き換え
+        XposedHelpers.findAndHookMethod(phoneWindowManager, "isWakeKeyWhenScreenOff",
+                int.class, new XC_MethodReplacement() {
+                    @Override
+                    protected Object replaceHookedMethod(MethodHookParam param)
+                            throws Throwable {
+                        int keyCode = (Integer) param.args[0];
+                        switch (keyCode) {
+                            case KeyEvent.KEYCODE_VOLUME_DOWN:
+                            case KeyEvent.KEYCODE_VOLUME_UP:
+                                // 音量アップ・ダウンボタンの場合はtrueを返す
+                                return true;
+                            default:
+                                // それ以外のボタンの場合は、オリジナルのメソッドを実行
+                                return XUtil.invokeOriginalMethod(param);
+                        }
+                    }
+                });
+    }
+
+    @HandleLoadPackage(summary = "メニューキー表示", targetPackage = XConst.PKG_SYSTEM_UI)
+    public static void setMenuVisibility(String modulePath, LoadPackageParam lpparam,
+            ModOtherUtilitiesSettingsGen mOtherUtilitiesSettings) throws Throwable {
         if (mOtherUtilitiesSettings.showMenuKey) {
             Class<?> navigationBarViewClass = XposedHelpers.findClass(
                     "com.android.systemui.statusbar.phone.NavigationBarView", lpparam.classLoader);

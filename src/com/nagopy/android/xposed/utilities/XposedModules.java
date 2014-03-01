@@ -20,9 +20,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -51,9 +49,16 @@ public class XposedModules implements IXposedHookZygoteInit, IXposedHookLoadPack
         IXposedHookInitPackageResources {
 
     List<XModuleInfo> mXModuleInfoList = new ArrayList<XposedModules.XModuleInfo>();
+    private String modulePath;
+
+    private static final String LOG_FORMAT_INVOKE = "invoke: %s(%s)";
+    private static final String LOG_FORMAT_SUCCESS = "success: %s(%s)";
 
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
+        // モジュールパスを保存
+        modulePath = startupParam.modulePath;
+
         XSharedPreferences xSharedPreferences = new XSharedPreferences(Const.PACKAGE_NAME);
         xSharedPreferences.reload();
 
@@ -77,82 +82,77 @@ public class XposedModules implements IXposedHookZygoteInit, IXposedHookLoadPack
         for (Entry<Class<?>, String> entry : xposedModules.entrySet()) {
             Class<?> module = entry.getKey();
 
-            XModuleInfo info = new XModuleInfo();
-            info.moduleInstance = module.newInstance();
-
-            // モジュール設定を検索、インスタンス生成
-            Field[] fields = module.getDeclaredFields();
-            for (Field field : fields) {
-                if (field.isAnnotationPresent(XModuleSettings.class)) {
-                    Object settings = field.getType().getConstructor().newInstance();
-                    field.setAccessible(true);
-                    field.set(info.moduleInstance, settings);
-
-                    XLog.d(settings.getClass().getSimpleName(), settings);
-                }
+            if (!module.isAnnotationPresent(XposedModule.class)) {
+                // モジュールじゃない場合は次へ
+                continue;
             }
+            XposedModule xposedModuleAnnotation = module.getAnnotation(XposedModule.class);
 
+            XModuleInfo info = new XModuleInfo();
+            info.clsName = module.getSimpleName();
+
+            // モジュール設定のインスタンスを生成
+            info.settings = xposedModuleAnnotation.setting().newInstance();
+
+            // クラスについてるXMinSdkVersionを取得
             XMinSdkVersion classMinSdkVersion = module.getAnnotation(XMinSdkVersion.class);
 
-            if (isImplemented(module, IXposedHookZygoteInit.class)) {
-                XModuleMethod methodInfo = new XModuleMethod();
-                methodInfo.method = module.getMethod("initZygote", StartupParam.class);
-                if (methodInfo.method.isAnnotationPresent(XTargetPackage.class)) {
-                    XTargetPackage targetPackage = methodInfo.method
-                            .getAnnotation(XTargetPackage.class);
-                    methodInfo.targetPackageName = Arrays.asList(targetPackage.value());
-                }
-                if (classMinSdkVersion != null) {
-                    methodInfo.minSdkVersion = classMinSdkVersion.value();
-                } else if (methodInfo.method.isAnnotationPresent(XMinSdkVersion.class)) {
-                    XMinSdkVersion minSdkVersion = methodInfo.method
-                            .getAnnotation(XMinSdkVersion.class);
-                    if (minSdkVersion != null) {
-                        methodInfo.minSdkVersion = minSdkVersion.value();
-                    }
-                }
-                info.initZygote = methodInfo;
-            }
+            Method[] methods = module.getMethods();
 
-            if (isImplemented(module, IXposedHookLoadPackage.class)) {
-                XModuleMethod methodInfo = new XModuleMethod();
-                methodInfo.method = module.getMethod("handleLoadPackage", LoadPackageParam.class);
-                if (methodInfo.method.isAnnotationPresent(XTargetPackage.class)) {
-                    XTargetPackage targetPackage = methodInfo.method
-                            .getAnnotation(XTargetPackage.class);
-                    methodInfo.targetPackageName = Arrays.asList(targetPackage.value());
-                }
-                if (classMinSdkVersion != null) {
-                    methodInfo.minSdkVersion = classMinSdkVersion.value();
-                } else if (methodInfo.method.isAnnotationPresent(XMinSdkVersion.class)) {
-                    XMinSdkVersion minSdkVersion = methodInfo.method
-                            .getAnnotation(XMinSdkVersion.class);
-                    if (minSdkVersion != null) {
-                        methodInfo.minSdkVersion = minSdkVersion.value();
-                    }
-                }
-                info.handleLoadPackage = methodInfo;
-            }
+            for (Method method : methods) {
+                if (method.isAnnotationPresent(InitZygote.class)) {
+                    XModuleMethod initZygoteMethod = new XModuleMethod();
 
-            if (isImplemented(module, IXposedHookInitPackageResources.class)) {
-                XModuleMethod methodInfo = new XModuleMethod();
-                methodInfo.method = module.getMethod("handleInitPackageResources",
-                        InitPackageResourcesParam.class);
-                if (methodInfo.method.isAnnotationPresent(XTargetPackage.class)) {
-                    XTargetPackage targetPackage = methodInfo.method
-                            .getAnnotation(XTargetPackage.class);
-                    methodInfo.targetPackageName = Arrays.asList(targetPackage.value());
+                    // メソッドをセットしとく
+                    initZygoteMethod.method = method;
+
+                    // 対象SDKバージョンを取得
+                    initZygoteMethod.minSdkVersion = getMinSdkVersion(method, classMinSdkVersion);
+
+                    // サマリー取得
+                    InitZygote annotation = method.getAnnotation(InitZygote.class);
+                    initZygoteMethod.summary = annotation.summary();
+
+                    info.initZygote.add(initZygoteMethod);
+                } else if (method.isAnnotationPresent(HandleLoadPackage.class)) {
+                    XModuleMethod handleLoadPackage = new XModuleMethod();
+                    HandleLoadPackage annotation = method.getAnnotation(HandleLoadPackage.class);
+
+                    // メソッドをセットしとく
+                    handleLoadPackage.method = method;
+
+                    // 対象パッケージを取得
+                    handleLoadPackage.targetPackageName = Arrays.asList(annotation.targetPackage());
+
+                    // 対象SDKバージョンを取得
+                    handleLoadPackage.minSdkVersion = getMinSdkVersion(method, classMinSdkVersion);
+
+                    // サマリー取得
+                    handleLoadPackage.summary = annotation.summary();
+
+                    info.handleLoadPackage.add(handleLoadPackage);
+                } else if (method.isAnnotationPresent(HandleInitPackageResources.class)) {
+                    XModuleMethod handleInitPackageResources = new XModuleMethod();
+                    HandleInitPackageResources annotation = method
+                            .getAnnotation(HandleInitPackageResources.class);
+
+                    // メソッドをセットしとく
+                    handleInitPackageResources.method = method;
+
+                    // 対象パッケージを取得
+                    handleInitPackageResources.targetPackageName = Arrays.asList(annotation
+                            .targetPackage());
+
+                    // 対象SDKバージョンを取得
+                    handleInitPackageResources.minSdkVersion = getMinSdkVersion(method,
+                            classMinSdkVersion);
+
+                    // サマリー取得
+                    handleInitPackageResources.summary = annotation.summary();
+
+                    info.handleInitPackageResources.add(handleInitPackageResources);
                 }
-                if (classMinSdkVersion != null) {
-                    methodInfo.minSdkVersion = classMinSdkVersion.value();
-                } else if (methodInfo.method.isAnnotationPresent(XMinSdkVersion.class)) {
-                    XMinSdkVersion minSdkVersion = methodInfo.method
-                            .getAnnotation(XMinSdkVersion.class);
-                    if (minSdkVersion != null) {
-                        methodInfo.minSdkVersion = minSdkVersion.value();
-                    }
-                }
-                info.handleInitPackageResources = methodInfo;
+
             }
 
             // モジュールの有効・無効を判定
@@ -162,6 +162,8 @@ public class XposedModules implements IXposedHookZygoteInit, IXposedHookLoadPack
             mXModuleInfoList.add(info);
 
             XLog.d(info);
+            XposedBridge.log(info.toString());
+
         }
 
         // 実行
@@ -171,23 +173,50 @@ public class XposedModules implements IXposedHookZygoteInit, IXposedHookLoadPack
                 continue;
             }
 
-            XModuleMethod methodInfo = moduleInfo.initZygote;
-
-            if (methodInfo == null) {
+            if (moduleInfo.initZygote.isEmpty()) {
                 continue;
             }
 
-            if (Build.VERSION.SDK_INT >= methodInfo.minSdkVersion) {
-                try {
-                    moduleInfo.d("initZygote START");
-                    methodInfo.method.invoke(moduleInfo.moduleInstance, startupParam);
-                    moduleInfo.d("initZygote COMPLETED!");
-                } catch (Throwable t) {
-                    moduleInfo.e("ERROR: " + t.getMessage());
-                    XposedBridge.log(t);
+            moduleInfo.d("initZygote START");
+            for (XModuleMethod methodInfo : moduleInfo.initZygote) {
+                if (Build.VERSION.SDK_INT >= methodInfo.minSdkVersion) {
+                    try {
+                        // ログ出力
+                        moduleInfo.d(String.format(LOG_FORMAT_INVOKE, methodInfo.method.getName(),
+                                methodInfo.summary));
+                        // メソッド実行
+                        methodInfo.method.invoke(null, startupParam, moduleInfo.settings);
+                        // 成功ログ出力
+                        moduleInfo.d(String.format(LOG_FORMAT_SUCCESS, methodInfo.method.getName(),
+                                methodInfo.summary));
+                    } catch (Throwable t) {
+                        // エラーログ出力
+                        XLog.e(t);
+                    }
                 }
             }
+            moduleInfo.d("initZygote FINISH");
         }
+    }
+
+    /**
+     * MinSdkVersionを取得
+     * 
+     * @param method
+     * @param classMinSdkVersion
+     * @return
+     */
+    private int getMinSdkVersion(Method method, XMinSdkVersion classMinSdkVersion) {
+        if (classMinSdkVersion != null) {
+            return classMinSdkVersion.value();
+        } else if (method.isAnnotationPresent(XMinSdkVersion.class)) {
+            XMinSdkVersion minSdkVersion = method.getAnnotation(XMinSdkVersion.class);
+            if (minSdkVersion != null) {
+                return minSdkVersion.value();
+            }
+        }
+
+        return Build.VERSION_CODES.JELLY_BEAN;
     }
 
     @Override
@@ -199,22 +228,30 @@ public class XposedModules implements IXposedHookZygoteInit, IXposedHookLoadPack
                 continue;
             }
 
-            XModuleMethod methodInfo = moduleInfo.handleLoadPackage;
-
-            if (methodInfo == null) {
+            if (moduleInfo.handleLoadPackage.isEmpty()) {
                 continue;
             }
 
-            boolean checkPkg = methodInfo.targetPackageName.isEmpty()
-                    || methodInfo.targetPackageName.contains(lpparam.packageName);
-            if (checkPkg && Build.VERSION.SDK_INT >= methodInfo.minSdkVersion) {
-                try {
-                    moduleInfo.d("handleLoadPackage START");
-                    methodInfo.method.invoke(moduleInfo.moduleInstance, lpparam);
-                    moduleInfo.d("handleLoadPackage COMPLETED!");
-                } catch (Throwable t) {
-                    moduleInfo.e("ERROR: " + t.getMessage());
-                    XposedBridge.log(t);
+            for (XModuleMethod methodInfo : moduleInfo.handleLoadPackage) {
+                if (!methodInfo.targetPackageName.contains(lpparam.packageName)) {
+                    // 対象じゃない場合はスキップ
+                    continue;
+                }
+
+                if (Build.VERSION.SDK_INT >= methodInfo.minSdkVersion) {
+                    try {
+                        // ログ出力
+                        moduleInfo.d(String.format(LOG_FORMAT_INVOKE, methodInfo.method.getName(),
+                                methodInfo.summary));
+                        // メソッド実行
+                        methodInfo.method.invoke(null, modulePath, lpparam, moduleInfo.settings);
+                        // 成功ログ出力
+                        moduleInfo.d(String.format(LOG_FORMAT_SUCCESS, methodInfo.method.getName(),
+                                methodInfo.summary));
+                    } catch (Throwable t) {
+                        // エラーログ出力
+                        XLog.e(t);
+                    }
                 }
             }
         }
@@ -229,61 +266,58 @@ public class XposedModules implements IXposedHookZygoteInit, IXposedHookLoadPack
                 continue;
             }
 
-            XModuleMethod methodInfo = moduleInfo.handleInitPackageResources;
-
-            if (methodInfo == null) {
+            if (moduleInfo.handleInitPackageResources.isEmpty()) {
                 continue;
             }
 
-            boolean checkPkg = methodInfo.targetPackageName.isEmpty()
-                    || methodInfo.targetPackageName.contains(resparam.packageName);
-            if (checkPkg && Build.VERSION.SDK_INT >= methodInfo.minSdkVersion) {
-                try {
-                    moduleInfo.d("handleInitPackageResources START");
-                    methodInfo.method.invoke(moduleInfo.moduleInstance, resparam);
-                    moduleInfo.d("handleInitPackageResources COMPLETED!");
-                } catch (Throwable t) {
-                    moduleInfo.e("ERROR: " + t.getMessage());
-                    XposedBridge.log(t);
+            for (XModuleMethod methodInfo : moduleInfo.handleInitPackageResources) {
+                if (!methodInfo.targetPackageName.contains(resparam.packageName)) {
+                    // 対象じゃない場合はスキップ
+                    continue;
+                }
+
+                if (Build.VERSION.SDK_INT >= methodInfo.minSdkVersion) {
+                    try {
+                        // ログ出力
+                        moduleInfo.d(String.format(LOG_FORMAT_INVOKE, methodInfo.method.getName(),
+                                methodInfo.summary));
+                        // メソッド実行
+                        methodInfo.method.invoke(null, modulePath, resparam, moduleInfo.settings);
+                        // 成功ログ出力
+                        moduleInfo.d(String.format(LOG_FORMAT_SUCCESS, methodInfo.method.getName(),
+                                methodInfo.summary));
+                    } catch (Throwable t) {
+                        // エラーログ出力
+                        XLog.e(t);
+                    }
                 }
             }
         }
     }
 
-    public static boolean isImplemented(Class<?> clazz, Class<?> intrfc) {
-        if (clazz == null || intrfc == null) {
-            return false;
-        }
-        // インターフェースを実装したクラスであるかどうかをチェック
-        if (!clazz.isInterface() && intrfc.isAssignableFrom(clazz)
-                && !Modifier.isAbstract(clazz.getModifiers())) {
-            return true;
-        }
-        return false;
-    }
-
     private static class XModuleInfo {
         @Override
         public String toString() {
-            return "XModuleInfo [moduleInstance=" + moduleInstance + ", enabled=" + enabled
-                    + ", initZygote=" + initZygote + ", handleLoadPackage=" + handleLoadPackage
+            return "XModuleInfo [clsName=" + clsName + ", enabled=" + enabled + ", initZygote="
+                    + initZygote + ", handleLoadPackage=" + handleLoadPackage
                     + ", handleInitPackageResources=" + handleInitPackageResources + "]";
         }
 
-        /** モジュールのインスタンス */
-        Object moduleInstance;
+        String clsName;
+
+        /** 設定のインスタンス */
+        Object settings;
+
         /** モジュールの有効判定 */
         boolean enabled;
-        XModuleMethod initZygote;
-        XModuleMethod handleLoadPackage;
-        XModuleMethod handleInitPackageResources;
+
+        // それぞれの実行メソッド
+        List<XModuleMethod> initZygote = new ArrayList<XposedModules.XModuleMethod>();
+        List<XModuleMethod> handleLoadPackage = new ArrayList<XposedModules.XModuleMethod>();
+        List<XModuleMethod> handleInitPackageResources = new ArrayList<XposedModules.XModuleMethod>();
 
         public void d(Object obj) {
-            XLog.d(moduleInstance.getClass().getSimpleName(), obj);
-        }
-
-        public void e(Object obj) {
-            XLog.e(moduleInstance.getClass().getSimpleName(), obj);
+            XLog.d(clsName, obj);
         }
     }
 
@@ -293,6 +327,9 @@ public class XposedModules implements IXposedHookZygoteInit, IXposedHookLoadPack
             return "XModuleMethod [method=" + method + ", minSdkVersion=" + minSdkVersion
                     + ", targetPackageName=" + targetPackageName + "]";
         }
+
+        /** サマリー（ログ表示用） */
+        String summary;
 
         /** 実行メソッド */
         Method method;
@@ -307,13 +344,6 @@ public class XposedModules implements IXposedHookZygoteInit, IXposedHookLoadPack
     public @interface XModuleSettings {
     }
 
-    @Target(ElementType.METHOD)
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface XTargetPackage {
-        /** 処理対象のパッケージ名（任意） */
-        String[] value();
-    }
-
     @Target({
             ElementType.METHOD, ElementType.TYPE
     })
@@ -321,4 +351,33 @@ public class XposedModules implements IXposedHookZygoteInit, IXposedHookLoadPack
     public @interface XMinSdkVersion {
         int value();
     }
+
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface InitZygote {
+        String summary() default "";
+    }
+
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface HandleLoadPackage {
+        String[] targetPackage();
+
+        String summary() default "";
+    }
+
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface HandleInitPackageResources {
+        String[] targetPackage();
+
+        String summary() default "";
+    }
+
+    @Target(ElementType.TYPE)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface XposedModule {
+        Class<?> setting();
+    }
+
 }

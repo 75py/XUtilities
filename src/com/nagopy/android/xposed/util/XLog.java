@@ -16,11 +16,23 @@
 
 package com.nagopy.android.xposed.util;
 
+import de.robv.android.xposed.XposedBridge;
 import android.util.Log;
 
 public class XLog {
 
     private static final String TAG = "XUtilities";
+
+    private static final String LOG_FORMAT_DEFAULT = "%s ::: %s";
+    private static final String LOG_FORMAT_MODULE = "%s_%s ::: %s";
+
+    public static void e(Throwable t) {
+        XposedBridge.log(String.format(LOG_FORMAT_DEFAULT, TAG, Log.getStackTraceString(t)));
+    }
+
+    public static void e(String tag, Throwable t) {
+        XposedBridge.log(String.format(LOG_FORMAT_MODULE, TAG, tag, Log.getStackTraceString(t)));
+    }
 
     /**
      * デバッグログ出力を行う.
@@ -28,55 +40,19 @@ public class XLog {
      * @param obj 出力値
      */
     public static void d(Object obj) {
-        Log.d(TAG, obj == null ? "null" : obj.toString());
+        XposedBridge.log(String.format(LOG_FORMAT_DEFAULT, TAG,
+                obj == null ? "null" : obj.toString()));
     }
 
     /**
      * デバッグログ出力を行う.
      * 
-     * @param tag "75pyXposedMod_" + tag
+     * @param tag "XUtilities_" + tag
      * @param obj 出力値
      */
     public static void d(String tag, Object obj) {
-        Log.d(TAG + "_" + tag, obj == null ? "null" : obj.toString());
-    }
-
-    /**
-     * ログ出力を行う.
-     * 
-     * @param obj 出力値
-     */
-    public static void i(Object obj) {
-        Log.i(TAG, obj == null ? "null" : obj.toString());
-    }
-
-    /**
-     * ログ出力を行う.
-     * 
-     * @param tag "75pyXposedMod_" + tag
-     * @param obj 出力値
-     */
-    public static void i(String tag, Object obj) {
-        Log.i(TAG + "_" + tag, obj == null ? "null" : obj.toString());
-    }
-
-    /**
-     * ログ出力を行う.
-     * 
-     * @param obj 出力値
-     */
-    public static void e(Object obj) {
-        Log.e(TAG, obj == null ? "null" : obj.toString());
-    }
-
-    /**
-     * ログ出力を行う.
-     * 
-     * @param tag "75pyXposedMod_" + tag
-     * @param obj 出力値
-     */
-    public static void e(String tag, Object obj) {
-        Log.e(TAG + "_" + tag, obj == null ? "null" : obj.toString());
+        XposedBridge.log(String.format(LOG_FORMAT_MODULE, TAG, tag,
+                obj == null ? "null" : obj.toString()));
     }
 
 }

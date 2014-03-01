@@ -19,6 +19,7 @@ package com.nagopy.android.xposed.utilities;
 import java.util.Iterator;
 import java.util.List;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -27,6 +28,7 @@ import android.content.res.XModuleResources;
 import android.content.res.XResources;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.UserHandle;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
@@ -40,13 +42,13 @@ import android.widget.ListAdapter;
 
 import com.nagopy.android.common.util.DimenUtil;
 import com.nagopy.android.common.util.VersionUtil;
-import com.nagopy.android.xposed.AbstractXposedModule;
-import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
+import com.nagopy.android.xposed.utilities.XposedModules.InitZygote;
+import com.nagopy.android.xposed.utilities.XposedModules.XposedModule;
 import com.nagopy.android.xposed.utilities.setting.AlwaysUsePerAppsList.PerAppsSetting;
 import com.nagopy.android.xposed.utilities.setting.ModAppPickerSettingsGen;
 import com.nagopy.android.xposed.utilities.util.Const;
 
-import de.robv.android.xposed.IXposedHookZygoteInit;
+import de.robv.android.xposed.IXposedHookZygoteInit.StartupParam;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedBridge;
@@ -57,33 +59,19 @@ import de.robv.android.xposed.callbacks.XC_LayoutInflated;
  * アプリ選択をカスタマイズするモジュール.<br>
  * 常時のチェックボックス部分はAlternateAppPickerをほぼコピー(Apache License v2.0)。
  */
-public class ModAppPicker extends AbstractXposedModule implements IXposedHookZygoteInit {
+@XposedModule(setting = ModAppPickerSettingsGen.class)
+public class ModAppPicker {
 
     /** アクション名保存用のキー */
     private static final String KEY_TARGET_ACTION = "targetAction";
 
-    @XModuleSettings
-    private ModAppPickerSettingsGen mSettings;
-
-    @Override
-    public void initZygote(StartupParam startupParam) throws Throwable {
-        if (mSettings.showAlwaysUse) {
-            // 常時のチェックボックス表示
-            showAlwaysCheckBox(startupParam);
+    @InitZygote(summary = "常時のチェックボックス表示")
+    public static void showAlwaysCheckBox(final StartupParam startupParam,
+            final ModAppPickerSettingsGen mSettings) {
+        if (!mSettings.showAlwaysUse) {
+            return;
         }
 
-        if (mSettings.appPickerBlackList != null && mSettings.appPickerBlackList.size() > 0) {
-            // ブラックリストのアプリを除外
-            hideBlackListApps();
-        }
-
-        if (mSettings.settingAlwaysPerApps) {
-            // アプリごとに常時記憶を分離
-            registerAlwaysCheckPerApps();
-        }
-    }
-
-    private void showAlwaysCheckBox(final StartupParam startupParam) {
         final String resourceName;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             resourceName = "resolver_list";
@@ -188,7 +176,6 @@ public class ModAppPicker extends AbstractXposedModule implements IXposedHookZyg
                                     checkedPos = position;
                                 }
                                 final boolean enabled = checkedPos != GridView.INVALID_POSITION;
-                                log("onItemClick:" + checkedPos + ", " + enabled);
                                 if (enabled) {
                                     XposedHelpers.callMethod(param.thisObject,
                                             "startSelected", position, mAlwaysCheckBox.isChecked());
@@ -199,7 +186,7 @@ public class ModAppPicker extends AbstractXposedModule implements IXposedHookZyg
                 });
     }
 
-    private AbsListView getAbsListView(Object thisObject) {
+    private static AbsListView getAbsListView(Object thisObject) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             return (AbsListView) XposedHelpers.getObjectField(thisObject, "mListView");
         } else {
@@ -210,7 +197,14 @@ public class ModAppPicker extends AbstractXposedModule implements IXposedHookZyg
     /**
      * ブラックリストのアプリを非表示にする.
      */
-    private void hideBlackListApps() {
+    @InitZygote(summary = "ブラックリストのアプリを除外")
+    public static void hideBlackListApps(final StartupParam startupParam,
+            final ModAppPickerSettingsGen mSettings) {
+
+        if (mSettings.appPickerBlackList == null || mSettings.appPickerBlackList.size() == 0) {
+            return;
+        }
+
         // ResolveListAdapter
         Class<?> clsResolveListAdapter = XposedHelpers.findClass(
                 "com.android.internal.app.ResolverActivity$ResolveListAdapter", null);
@@ -239,7 +233,14 @@ public class ModAppPicker extends AbstractXposedModule implements IXposedHookZyg
     /**
      * アプリごとに「常に」状態を保存する.
      */
-    private void registerAlwaysCheckPerApps() {
+    @InitZygote(summary = "アプリごとに常時記憶を分離")
+    public static void registerAlwaysCheckPerApps(StartupParam startupParam,
+            final ModAppPickerSettingsGen mSettings) throws Throwable {
+
+        if (!mSettings.settingAlwaysPerApps) {
+            return;
+        }
+
         Class<?> clsResolverActivity = XposedHelpers.findClass(
                 "com.android.internal.app.ResolverActivity", null);
         XposedHelpers.findAndHookMethod(clsResolverActivity, "onCreate", Bundle.class,
@@ -253,8 +254,6 @@ public class ModAppPicker extends AbstractXposedModule implements IXposedHookZyg
                                 "mLaunchedFromUid");
                         String launchedFromPkg = activity.getPackageManager().getNameForUid(
                                 mLaunchedFromUid);
-                        log("launched from : " + launchedFromPkg);
-                        log("current setting : " + mSettings.alwaysUsePerApps);
 
                         Intent paramIntent = (Intent) param.args[1];
 
@@ -265,22 +264,20 @@ public class ModAppPicker extends AbstractXposedModule implements IXposedHookZyg
 
                         PerAppsSetting launchApp = mSettings.alwaysUsePerApps.findByAction(
                                 launchedFromPkg, paramIntent.getAction());
-                        log(launchApp);
                         if (launchApp != null) {
                             AbsListView absListView = (AbsListView) getAbsListView(param.thisObject);
                             ListAdapter adapter = absListView.getAdapter();
                             List<?> mList = (List<?>) XposedHelpers
                                     .getObjectField(adapter, "mList");
                             int childCount = adapter.getCount();
-                            log("childCount:" + childCount);
                             for (int i = 0; i < childCount; i++) {
                                 Object item = mList.get(i);
-                                ResolveInfo ri = (ResolveInfo) getObjectField(item, "ri");
+                                ResolveInfo ri = (ResolveInfo) XposedHelpers.getObjectField(item,
+                                        "ri");
                                 if (TextUtils.equals(ri.activityInfo.packageName,
                                         launchApp.targetPackageName)
                                         && TextUtils.equals(ri.activityInfo.name,
                                                 launchApp.targetActivityName)) {
-                                    log("launch!! :" + ri);
                                     absListView.setItemChecked(i, true);
                                     XposedHelpers.callMethod(param.thisObject, "startSelected", i,
                                             false);
@@ -308,7 +305,6 @@ public class ModAppPicker extends AbstractXposedModule implements IXposedHookZyg
                                     "mLaunchedFromUid");
                             String launchedFromPkg = activity.getPackageManager().getNameForUid(
                                     mLaunchedFromUid);
-                            log("from: " + launchedFromPkg);
 
                             // 選択したアプリを取得
                             Object mAdapter = XposedHelpers.getObjectField(param.thisObject,
@@ -323,9 +319,6 @@ public class ModAppPicker extends AbstractXposedModule implements IXposedHookZyg
                                     .getAdditionalInstanceField(activity, KEY_TARGET_ACTION);
                             String targetAction = additionalInstanceField == null ? ""
                                     : (String) additionalInstanceField;
-
-                            log("target: " + targetPackageName + ", " + targetActivityName + ", "
-                                    + targetAction);
 
                             // 設定変更のブロードキャストを送信
                             Intent intent = new Intent(Const.ACTION_ALWAYS_USE_PER_APPS);
@@ -353,6 +346,21 @@ public class ModAppPicker extends AbstractXposedModule implements IXposedHookZyg
                 });
     }
 
+    /**
+     * @param context
+     * @param intent
+     */
+    @SuppressLint("NewApi")
+    private static void sendBroadcast(Context context, Intent intent) {
+        if (VersionUtil.isJBmr1OrLater()) {
+            UserHandle userAll = (UserHandle) XposedHelpers.getStaticObjectField(
+                    UserHandle.class, "ALL");
+            context.sendBroadcastAsUser(intent, userAll);
+        } else {
+            context.sendBroadcast(intent);
+        }
+    }
+
     private static class ViewHolder {
         LinearLayout mButtonLayout;
         View mAlwaysButton;
@@ -365,6 +373,5 @@ public class ModAppPicker extends AbstractXposedModule implements IXposedHookZyg
                     + mAlwaysButton + ", mOnceButton=" + mOnceButton + ", mAlwaysCheckBox="
                     + mAlwaysCheckBox + "]";
         }
-
     }
 }

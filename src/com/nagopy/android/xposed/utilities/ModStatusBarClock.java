@@ -37,17 +37,14 @@ import android.widget.TextView;
 
 import com.nagopy.android.common.pref.FontListPreference;
 import com.nagopy.android.common.util.DimenUtil;
-import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XConst;
 import com.nagopy.android.xposed.util.XUtil;
-import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
-import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
+import com.nagopy.android.xposed.utilities.XposedModules.HandleInitPackageResources;
+import com.nagopy.android.xposed.utilities.XposedModules.HandleLoadPackage;
+import com.nagopy.android.xposed.utilities.XposedModules.XposedModule;
 import com.nagopy.android.xposed.utilities.setting.ModStatusBarClockSettingsGen;
 import com.nagopy.android.xposed.utilities.util.Const;
 
-import de.robv.android.xposed.IXposedHookInitPackageResources;
-import de.robv.android.xposed.IXposedHookLoadPackage;
-import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedBridge;
@@ -60,25 +57,12 @@ import de.robv.android.xposed.callbacks.XCallback;
 /**
  * ステータスバーの時計をカスタマイズするモジュール.
  */
-public class ModStatusBarClock extends AbstractXposedModule implements
-        IXposedHookZygoteInit, IXposedHookLoadPackage,
-        IXposedHookInitPackageResources {
+@XposedModule(setting = ModStatusBarClockSettingsGen.class)
+public class ModStatusBarClock {
 
-    private static final String ADDITIONAL_FIELD_FORMAT = Const.ADDITIONAL_DATE_FORMAT;
-
-    @XModuleSettings
-    private ModStatusBarClockSettingsGen mStatusBarClockSettings;
-
-    private String modulePath;
-
-    @Override
-    public void initZygote(StartupParam startupParam) throws Throwable {
-        modulePath = startupParam.modulePath;
-    }
-
-    @XTargetPackage(XConst.PKG_SYSTEM_UI)
-    @Override
-    public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
+    @HandleLoadPackage(targetPackage = XConst.PKG_SYSTEM_UI, summary = "ステータスバー時計")
+    public static void handleLoadPackage(final String modulePath, LoadPackageParam lpparam,
+            ModStatusBarClockSettingsGen mSettings) throws Throwable {
         // Clockのクラスを取得
         final Class<?> clockClass = XposedHelpers.findClass(
                 "com.android.systemui.statusbar.policy.Clock",
@@ -92,7 +76,7 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                             throws Throwable {
                         Object additionalInstanceField = XposedHelpers
                                 .getAdditionalInstanceField(param.thisObject,
-                                        ADDITIONAL_FIELD_FORMAT);
+                                        Const.ADDITIONAL_DATE_FORMAT);
                         if (additionalInstanceField == null) {
                             // モジュールで追加した値がない場合は元のメソッドを実行
                             return XUtil.invokeOriginalMethod(param);
@@ -216,10 +200,10 @@ public class ModStatusBarClock extends AbstractXposedModule implements
                 });
     }
 
-    @XTargetPackage(XConst.PKG_SYSTEM_UI)
-    @Override
-    public void handleInitPackageResources(
-            final InitPackageResourcesParam resparam) throws Throwable {
+    @HandleInitPackageResources(targetPackage = XConst.PKG_SYSTEM_UI, summary = "ステータスバー時計（リソース）")
+    public static void handleInitPackageResources(final String modulePath,
+            final InitPackageResourcesParam resparam,
+            final ModStatusBarClockSettingsGen mStatusBarClockSettings) throws Throwable {
         // レイアウトをごにょごにょ
         resparam.res.hookLayout(XConst.PKG_SYSTEM_UI, "layout",
                 "super_status_bar", new XC_LayoutInflated(-7575) { // 優先度低
@@ -325,7 +309,7 @@ public class ModStatusBarClock extends AbstractXposedModule implements
             final SimpleDateFormat mClockFormat = new SimpleDateFormat(
                     mClockFormatString, locale);
             XposedHelpers.setAdditionalInstanceField(clock,
-                    ADDITIONAL_FIELD_FORMAT, mClockFormat);
+                    Const.ADDITIONAL_DATE_FORMAT, mClockFormat);
 
             // 表示位置
             Object currentPosition = clock.getTag(R.id.tag_clock_current_position);
@@ -398,7 +382,7 @@ public class ModStatusBarClock extends AbstractXposedModule implements
             clock.setGravity(clockModDao.defaultGravity);
             clock.setTypeface(clockModDao.defaultTypeface);
             XposedHelpers.removeAdditionalInstanceField(clock,
-                    ADDITIONAL_FIELD_FORMAT);
+                    Const.ADDITIONAL_DATE_FORMAT);
 
             // 表示位置
             Object currentPosition = clock.getTag(R.id.tag_clock_current_position);

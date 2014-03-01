@@ -26,15 +26,13 @@ import android.view.View.OnTouchListener;
 import android.widget.TextClock;
 
 import com.nagopy.android.common.util.GestureUtil;
-import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XLog;
+import com.nagopy.android.xposed.utilities.XposedModules.HandleLoadPackage;
 import com.nagopy.android.xposed.utilities.XposedModules.XMinSdkVersion;
-import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
-import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
+import com.nagopy.android.xposed.utilities.XposedModules.XposedModule;
 import com.nagopy.android.xposed.utilities.service.TorchService;
 import com.nagopy.android.xposed.utilities.setting.ModLockscreenTorchSettingsGen;
 
-import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
@@ -42,19 +40,20 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 /**
  * ロックスクリーンでライトを点灯させるためのモジュール.
  */
+@XposedModule(setting = ModLockscreenTorchSettingsGen.class)
 @XMinSdkVersion(Build.VERSION_CODES.JELLY_BEAN_MR1)
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-public class ModLockscreenTorch extends AbstractXposedModule implements IXposedHookLoadPackage {
-
-    @XModuleSettings
-    private ModLockscreenTorchSettingsGen mLockscreenTorchSettings;
+public class ModLockscreenTorch {
 
     /** キーガードのパッケージ名 */
     private static final String PACKAGE_KEYGUARD = "com.android.keyguard";
 
-    @XTargetPackage(PACKAGE_KEYGUARD)
-    @Override
-    public void handleLoadPackage(final LoadPackageParam lpparam) throws Throwable {
+    @HandleLoadPackage(targetPackage = PACKAGE_KEYGUARD)
+    public static void handleLoadPackage(
+            final String modulePath,
+            final LoadPackageParam lpparam,
+            final ModLockscreenTorchSettingsGen mLockscreenTorchSettings
+            ) throws Throwable {
         // KeyguardStatusViewのクラスを取得
         Class<?> clsKeyguardStatusView = XposedHelpers.findClass(
                 "com.android.keyguard.KeyguardStatusView", lpparam.classLoader);
@@ -103,7 +102,7 @@ public class ModLockscreenTorch extends AbstractXposedModule implements IXposedH
 
         @Override
         public boolean onDoubleTap(MotionEvent e) {
-            XLog.d("ClockTapTorchListener", "onDoubleTap:" + useDoubleTap);
+            XLog.d("ModLockscreenTorch", "onDoubleTap:" + useDoubleTap);
             if (useDoubleTap) {
                 // ダブルタップ点灯が有効の場合はトグルのブロードキャストを送信
                 mContext.sendBroadcast(new Intent(TorchService.ACTION_TORCH_TOGGLE));
@@ -113,7 +112,7 @@ public class ModLockscreenTorch extends AbstractXposedModule implements IXposedH
 
         @Override
         public void onLongPress(MotionEvent e) {
-            XLog.d("ClockTapTorchListener", "onLongPress:" + useLongTap);
+            XLog.d("ModLockscreenTorch", "onLongPress:" + useLongTap);
             if (useLongTap) {
                 // ロングタップ点灯が有効の場合はトグルのブロードキャストを送信
                 mContext.sendBroadcast(new Intent(TorchService.ACTION_TORCH_TOGGLE));
