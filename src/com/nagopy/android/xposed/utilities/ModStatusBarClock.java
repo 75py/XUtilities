@@ -191,7 +191,7 @@ public class ModStatusBarClock {
                         boolean show = (Boolean) param.args[0];
                         int clockId = mStatusBarView.getResources().getIdentifier("clock", "id",
                                 XConst.PKG_SYSTEM_UI);
-                        View clock = mStatusBarView.getRootView().findViewById(clockId);
+                        View clock = mStatusBarView.findViewById(clockId);
                         if (clock != null) {
                             clock.setVisibility(show ? View.VISIBLE : View.GONE);
                         }
