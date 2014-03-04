@@ -107,7 +107,6 @@ public class AlwaysUsePerAppsSettingActivity extends Activity implements OnClick
                 SparseBooleanArray checked = mListView.getCheckedItemPositions();
                 Set<AlwaysUsePerAppsList.PerAppsSetting> set = new HashSet<AlwaysUsePerAppsList.PerAppsSetting>();
 
-                // XLog.d(checked);
                 for (int i = 0; i < checked.size(); i++) {
                     if (checked.valueAt(i)) {
                         AlwaysUsePerAppsList.PerAppsSetting perAppsSetting = mAlwaysUsePerAppsList.list
@@ -118,7 +117,6 @@ public class AlwaysUsePerAppsSettingActivity extends Activity implements OnClick
                 for (AlwaysUsePerAppsList.PerAppsSetting delete : set) {
                     mAlwaysUsePerAppsList.list.remove(delete);
                 }
-                // XLog.d(set);
 
                 preferences.putObject("always_use_per_apps", mAlwaysUsePerAppsList);
                 preferences.apply();
@@ -129,8 +127,6 @@ public class AlwaysUsePerAppsSettingActivity extends Activity implements OnClick
                 }
                 break;
         }
-
-        // XLog.d(preferences.getString("always_use_per_apps"));
 
         updateList();
         mAdapter.notifyDataSetChanged();

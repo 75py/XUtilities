@@ -32,9 +32,9 @@ import android.view.MenuItem;
 import com.google.analytics.tracking.android.EasyTracker;
 import com.google.analytics.tracking.android.GoogleAnalytics;
 import com.nagopy.android.xposed.ProcessorStringUtil;
-import com.nagopy.android.xposed.util.XLog;
 import com.nagopy.android.xposed.utilities.util.AnalyticsUtil;
 import com.nagopy.android.xposed.utilities.util.Const;
+import com.nagopy.android.xposed.utilities.util.Logger;
 
 /**
  * 設定画面を表示するアクティビティ.
@@ -114,7 +114,7 @@ public class PrefActivity extends PreferenceActivity implements OnSharedPreferen
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         // 変更された値によってブロードキャストを送信するか調べる
         Object newValue = sharedPreferences.getAll().get(key);
-        XLog.d("changed:" + key + "," + newValue);
+        Logger.d("changed:" + key + "," + newValue);
 
         Intent intent = new Intent();
         intent.putExtra("target", ProcessorStringUtil.snakeToCamel(key));
@@ -177,7 +177,7 @@ public class PrefActivity extends PreferenceActivity implements OnSharedPreferen
 
         if (intent.getAction() != null) {
             // ブロードキャストを送信
-            XLog.d("sendBroadcast:" + key + "," + sharedPreferences.getAll().get(key));
+            Logger.d("sendBroadcast:" + key + "," + sharedPreferences.getAll().get(key));
             sendBroadcast(intent);
         }
 

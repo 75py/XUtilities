@@ -21,10 +21,10 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.nagopy.android.common.helper.Preferences;
-import com.nagopy.android.xposed.util.XLog;
 import com.nagopy.android.xposed.utilities.setting.AlwaysUsePerAppsList;
 import com.nagopy.android.xposed.utilities.setting.AlwaysUsePerAppsList.PerAppsSetting;
 import com.nagopy.android.xposed.utilities.util.Const;
+import com.nagopy.android.xposed.utilities.util.Logger;
 
 public class AlwaysPerAppsReceiver extends BroadcastReceiver {
 
@@ -59,7 +59,7 @@ public class AlwaysPerAppsReceiver extends BroadcastReceiver {
      * @param obj
      */
     private static void log(Object obj) {
-        XLog.d(AlwaysPerAppsReceiver.class.getSimpleName(), obj);
+        Logger.d(AlwaysPerAppsReceiver.class.getSimpleName(), obj);
     }
 
 }

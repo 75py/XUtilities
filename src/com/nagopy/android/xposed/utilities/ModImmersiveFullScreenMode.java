@@ -24,12 +24,12 @@ import android.os.ResultReceiver;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
-import com.nagopy.android.xposed.AbstractXposedModule;
+import com.nagopy.android.xposed.utilities.XposedModules.InitZygote;
+import com.nagopy.android.xposed.utilities.XposedModules.XposedModule;
 import com.nagopy.android.xposed.utilities.XposedModules.XMinSdkVersion;
-import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
 import com.nagopy.android.xposed.utilities.setting.ModImmersiveFullScreenModeSettingsGen;
 
-import de.robv.android.xposed.IXposedHookZygoteInit;
+import de.robv.android.xposed.IXposedHookZygoteInit.StartupParam;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedHelpers;
@@ -37,13 +37,10 @@ import de.robv.android.xposed.XposedHelpers;
 /**
  * Immersive full screen modeモジュール.
  */
+@XposedModule(setting = ModImmersiveFullScreenModeSettingsGen.class)
 @XMinSdkVersion(Build.VERSION_CODES.KITKAT)
 @TargetApi(Build.VERSION_CODES.KITKAT)
-public class ModImmersiveFullScreenMode extends AbstractXposedModule implements
-        IXposedHookZygoteInit {
-
-    @XModuleSettings
-    private ModImmersiveFullScreenModeSettingsGen mSettings;
+public class ModImmersiveFullScreenMode {
 
     // 動作モードの値
     private static final String MODE_DISABLE = "0";
@@ -52,8 +49,9 @@ public class ModImmersiveFullScreenMode extends AbstractXposedModule implements
     @SuppressWarnings("unused")
     private static final String MODE_CUSTOM = "3";
 
-    @Override
-    public void initZygote(StartupParam startupParam) throws Throwable {
+    @InitZygote
+    public static void initZygote(StartupParam startupParam,
+            final ModImmersiveFullScreenModeSettingsGen mSettings) throws Throwable {
         if (mSettings.immersiveMode.equals(MODE_DISABLE)) {
             // 無効になっている場合は何もしない
             return;
@@ -158,25 +156,25 @@ public class ModImmersiveFullScreenMode extends AbstractXposedModule implements
                 });
     }
 
-    private void showSystemUI(View view) {
+    private static void showSystemUI(View view) {
         view.setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
     }
 
-    private void hideSystemUI(Activity activity) {
+    private static void hideSystemUI(Activity activity) {
         View view = activity.getWindow().getDecorView();
         hideSystemUI(view);
     }
 
-    private void hideNaviBar(Activity activity) {
+    private static void hideNaviBar(Activity activity) {
         View view = activity.getWindow().getDecorView();
         hideNaviBar(view);
     }
 
     // This snippet hides the system bars.
-    private void hideSystemUI(View view) {
+    private static void hideSystemUI(View view) {
         // Set the IMMERSIVE flag.
         // Set the content to appear under the system bars so that the content
         // doesn't resize when the system bars hide and show.
@@ -191,7 +189,7 @@ public class ModImmersiveFullScreenMode extends AbstractXposedModule implements
     }
 
     /** ナビバーだけimmersiveにする */
-    private void hideNaviBar(View view) {
+    private static void hideNaviBar(View view) {
         view.setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_IMMERSIVE

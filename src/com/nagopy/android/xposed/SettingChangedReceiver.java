@@ -20,13 +20,13 @@ import java.lang.ref.WeakReference;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.nagopy.android.xposed.util.XLog;
-
-import de.robv.android.xposed.XposedBridge;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
+
+import com.nagopy.android.xposed.utilities.util.Logger;
 
 /**
  * 設定変更をリアルタイムで反映するためのレシーバー.
@@ -70,8 +70,7 @@ public abstract class SettingChangedReceiver extends BroadcastReceiver {
 
             onDataChanged();
         } catch (Throwable t) {
-            XLog.e(getClass().getSimpleName(), t);
-            XposedBridge.log(t);
+            Logger.e(getClass().getSimpleName(), Log.getStackTraceString(t));
         }
     }
 

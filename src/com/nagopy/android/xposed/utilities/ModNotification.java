@@ -28,15 +28,14 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.nagopy.android.xposed.AbstractXposedModule;
 import com.nagopy.android.xposed.util.XConst;
 import com.nagopy.android.xposed.util.XUtil;
-import com.nagopy.android.xposed.utilities.XposedModules.XModuleSettings;
-import com.nagopy.android.xposed.utilities.XposedModules.XTargetPackage;
+import com.nagopy.android.xposed.utilities.XposedModules.HandleInitPackageResources;
+import com.nagopy.android.xposed.utilities.XposedModules.HandleLoadPackage;
+import com.nagopy.android.xposed.utilities.XposedModules.XMinSdkVersion;
+import com.nagopy.android.xposed.utilities.XposedModules.XposedModule;
 import com.nagopy.android.xposed.utilities.setting.ModNotificationSettingsGen;
 
-import de.robv.android.xposed.IXposedHookInitPackageResources;
-import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedBridge;
@@ -45,16 +44,66 @@ import de.robv.android.xposed.callbacks.XC_InitPackageResources.InitPackageResou
 import de.robv.android.xposed.callbacks.XC_LayoutInflated;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 
-public class ModNotification extends AbstractXposedModule implements IXposedHookLoadPackage,
-        IXposedHookInitPackageResources {
+@XposedModule(setting = ModNotificationSettingsGen.class)
+public class ModNotification {
 
-    @XModuleSettings
-    private ModNotificationSettingsGen mNotificationSettings;
+    @HandleInitPackageResources(summary = "ヘッダーを非表示にする", targetPackage = XConst.PKG_SYSTEM_UI)
+    public static void hideNotificationHeader(
+            final String modulePath,
+            final InitPackageResourcesParam resparam,
+            final ModNotificationSettingsGen mNotificationSettings
+            ) throws Throwable {
+        if (!mNotificationSettings.hideNotificationHeader) {
+            return;
+        }
 
-    @XTargetPackage(XConst.PKG_SYSTEM_UI)
-    @Override
-    public void handleInitPackageResources(final InitPackageResourcesParam resparam)
-            throws Throwable {
+        resparam.res.hookLayout(XConst.PKG_SYSTEM_UI, "layout", "super_status_bar",
+                new XC_LayoutInflated() {
+                    @Override
+                    public void handleLayoutInflated(LayoutInflatedParam liparam)
+                            throws Throwable {
+                        // ヘッダー
+                        LinearLayout header = (LinearLayout) liparam.view.findViewById(
+                                liparam.res.getIdentifier("header", "id", XConst.PKG_SYSTEM_UI));
+                        header.setVisibility(View.GONE);
+                    }
+                });
+    }
+
+    @HandleInitPackageResources(summary = "キャリアを非表示にする", targetPackage = XConst.PKG_SYSTEM_UI)
+    public static void hideNotificationExpandedCarrier(
+            final String modulePath,
+            final InitPackageResourcesParam resparam,
+            final ModNotificationSettingsGen mNotificationSettings
+            ) throws Throwable {
+        if (!mNotificationSettings.hideNotificationExpandedCarrier) {
+            return;
+        }
+        resparam.res.hookLayout(XConst.PKG_SYSTEM_UI, "layout", "super_status_bar",
+                new XC_LayoutInflated() {
+                    @Override
+                    public void handleLayoutInflated(LayoutInflatedParam liparam)
+                            throws Throwable {
+                        // キャリア表示
+                        TextView carrierLabel = (TextView) liparam.view.findViewById(
+                                liparam.res.getIdentifier("carrier_label", "id",
+                                        XConst.PKG_SYSTEM_UI));
+                        carrierLabel.setVisibility(View.GONE);
+                        carrierLabel.setPadding(0, 0, 0, 1000);
+                    }
+                });
+    }
+
+    @HandleInitPackageResources(summary = "下寄せ・ヘッダー移動", targetPackage = XConst.PKG_SYSTEM_UI)
+    public static void notificationExpandedGravityBottom(
+            final String modulePath,
+            final InitPackageResourcesParam resparam,
+            final ModNotificationSettingsGen mNotificationSettings
+            ) throws Throwable {
+        if (!mNotificationSettings.notificationExpandedGravityBottom) {
+            return;
+        }
+
         resparam.res.hookLayout(XConst.PKG_SYSTEM_UI, "layout", "super_status_bar",
                 new XC_LayoutInflated() {
                     @Override
@@ -68,96 +117,73 @@ public class ModNotification extends AbstractXposedModule implements IXposedHook
                                 liparam.res.getIdentifier("carrier_label", "id",
                                         XConst.PKG_SYSTEM_UI));
 
-                        if (mNotificationSettings.hideNotificationHeader) {
-                            // ヘッダーを非表示にする
-                            header.setVisibility(View.GONE);
-                        }
+                        // キャリア表示部分にヘッダー分のマージンをセット
+                        FrameLayout.LayoutParams carrierLabelParams = (FrameLayout.LayoutParams) carrierLabel
+                                .getLayoutParams();
+                        carrierLabelParams.gravity = Gravity.TOP;
+                        carrierLabelParams.topMargin = carrierLabel
+                                .getContext().getResources()
+                                .getDimensionPixelSize(
+                                        liparam.res.getIdentifier(
+                                                "notification_panel_header_height",
+                                                "dimen",
+                                                XConst.PKG_SYSTEM_UI));
 
-                        if (mNotificationSettings.hideNotificationExpandedCarrier) {
-                            // キャリアを非表示にする
-                            carrierLabel.setVisibility(View.GONE);
-                            carrierLabel.setPadding(0, 0, 0, 1000);
-                        }
+                        // うまいことやる
+                        LinearLayout parentLayout = (LinearLayout) header.getParent();
+                        FrameLayout.LayoutParams parentLayoutParams = (FrameLayout.LayoutParams) parentLayout
+                                .getLayoutParams();
+                        parentLayoutParams.height = FrameLayout.LayoutParams.MATCH_PARENT;
 
-                        if (mNotificationSettings.notificationExpandedGravityBottom) {
-                            // 下寄せ
+                        ScrollView scrollView = (ScrollView) liparam.view.findViewById(
+                                liparam.res.getIdentifier("scroll", "id", XConst.PKG_SYSTEM_UI));
+                        FrameLayout.LayoutParams svParams = (FrameLayout.LayoutParams) scrollView
+                                .getLayoutParams();
+                        svParams.gravity = Gravity.BOTTOM;
 
-                            // キャリア表示部分にヘッダー分のマージンをセット
-                            FrameLayout.LayoutParams carrierLabelParams = (FrameLayout.LayoutParams) carrierLabel
-                                    .getLayoutParams();
-                            carrierLabelParams.gravity = Gravity.TOP;
-                            carrierLabelParams.topMargin = carrierLabel
-                                    .getContext().getResources()
-                                    .getDimensionPixelSize(
-                                            liparam.res.getIdentifier(
-                                                    "notification_panel_header_height",
-                                                    "dimen",
-                                                    XConst.PKG_SYSTEM_UI));
-
-                            // うまいことやる
-                            LinearLayout parentLayout = (LinearLayout) header.getParent();
-                            FrameLayout.LayoutParams parentLayoutParams = (FrameLayout.LayoutParams) parentLayout
-                                    .getLayoutParams();
-                            parentLayoutParams.height = FrameLayout.LayoutParams.MATCH_PARENT;
-
-                            ScrollView scrollView = (ScrollView) liparam.view.findViewById(
-                                    liparam.res.getIdentifier("scroll", "id", XConst.PKG_SYSTEM_UI));
-                            FrameLayout.LayoutParams svParams = (FrameLayout.LayoutParams) scrollView
-                                    .getLayoutParams();
-                            svParams.gravity = Gravity.BOTTOM;
-
-                            FrameLayout svParent = (FrameLayout) scrollView.getParent();
-                            LinearLayout.LayoutParams svParentParams = (LinearLayout.LayoutParams) svParent
-                                    .getLayoutParams();
-                            svParentParams.height = 0;
-                            svParentParams.weight = 1;
-
-                            if (mNotificationSettings.notificationHeaderBottom) {
-                                // ヘッダーをフッターにする
-                                LinearLayout.LayoutParams p = (LayoutParams) header
-                                        .getLayoutParams();
-                                parentLayout.removeView(header);
-                                parentLayout.addView(header, p);
-                            }
-                        }
+                        FrameLayout svParent = (FrameLayout) scrollView.getParent();
+                        LinearLayout.LayoutParams svParentParams = (LinearLayout.LayoutParams) svParent
+                                .getLayoutParams();
+                        svParentParams.height = 0;
+                        svParentParams.weight = 1;
                     }
                 });
     }
 
-    @XTargetPackage(XConst.PKG_SYSTEM_UI)
-    @Override
-    public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
-        // アイコンだけ隠す
-        try {
-            hideNotificationIcon(lpparam);
-        } catch (Throwable t) {
-            log("ERROR(hideNotificationIcon):" + t);
-            XposedBridge.log(t);
+    @HandleInitPackageResources(summary = "ヘッダーをフッターにする", targetPackage = XConst.PKG_SYSTEM_UI)
+    public static void notificationHeaderBottom(
+            final String modulePath,
+            final InitPackageResourcesParam resparam,
+            final ModNotificationSettingsGen mNotificationSettings
+            ) throws Throwable {
+        if (!mNotificationSettings.notificationHeaderBottom) {
+            return;
         }
+        resparam.res.hookLayout(XConst.PKG_SYSTEM_UI, "layout", "super_status_bar",
+                new XC_LayoutInflated() {
+                    @Override
+                    public void handleLayoutInflated(LayoutInflatedParam liparam)
+                            throws Throwable {
+                        // ヘッダー
+                        LinearLayout header = (LinearLayout) liparam.view.findViewById(
+                                liparam.res.getIdentifier("header", "id", XConst.PKG_SYSTEM_UI));
+                        LinearLayout parentLayout = (LinearLayout) header.getParent();
 
-        // 全部隠す
-        try {
-            hideAllNotification(lpparam);
-        } catch (Throwable t) {
-            log("ERROR(hideAllNotification):" + t);
-            XposedBridge.log(t);
-        }
-
-        // 順番を逆にしてみる
-        if (mNotificationSettings.reverseNotificationExpanded) {
-            try {
-                reverseNotification(lpparam);
-            } catch (Throwable t) {
-                log("ERROR(reverseNotification):" + t);
-                XposedBridge.log(t);
-            }
-        }
+                        LinearLayout.LayoutParams p = (LayoutParams) header.getLayoutParams();
+                        parentLayout.removeView(header);
+                        parentLayout.addView(header, p);
+                    }
+                });
     }
 
-    public void reverseNotification(LoadPackageParam lpparam) throws Throwable {
+    @HandleLoadPackage(summary = "順番を逆にしてみる", targetPackage = XConst.PKG_SYSTEM_UI)
+    public static void reverseNotification(
+            final String modulePath,
+            final LoadPackageParam lpparam,
+            final ModNotificationSettingsGen mNotificationSettings
+            ) throws Throwable {
         Class<?> clsNotificationData = XposedHelpers.findClass(
-                "com.android.systemui.statusbar.NotificationData",
-                lpparam.classLoader);
+                "com.android.systemui.statusbar.NotificationData", lpparam.classLoader);
         XposedHelpers.findAndHookMethod(clsNotificationData, "get", int.class,
                 new XC_MethodReplacement() {
                     @Override
@@ -174,9 +200,14 @@ public class ModNotification extends AbstractXposedModule implements IXposedHook
                 });
     }
 
+    @HandleLoadPackage(summary = "全通知非表示", targetPackage = XConst.PKG_SYSTEM_UI)
+    @XMinSdkVersion(Build.VERSION_CODES.JELLY_BEAN_MR2)
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-    public void hideAllNotification(LoadPackageParam lpparam) throws Throwable {
-        // addNotification
+    public static void hideAllNotification(
+            final String modulePath,
+            final LoadPackageParam lpparam,
+            final ModNotificationSettingsGen mNotificationSettings
+            ) throws Throwable {
         Class<?> clsPhoneStatusBar = XposedHelpers.findClass(
                 "com.android.systemui.statusbar.phone.PhoneStatusBar", lpparam.classLoader);
         XposedHelpers.findAndHookMethod(clsPhoneStatusBar, "addNotification", IBinder.class,
@@ -195,8 +226,12 @@ public class ModNotification extends AbstractXposedModule implements IXposedHook
                 });
     }
 
-    public void hideNotificationIcon(LoadPackageParam lpparam) throws Throwable {
-        // アイコンだけを非表示にする
+    @HandleLoadPackage(summary = "アイコンだけを非表示にする", targetPackage = XConst.PKG_SYSTEM_UI)
+    public static void hideNotificationIcon(
+            final String modulePath,
+            final LoadPackageParam lpparam,
+            final ModNotificationSettingsGen mNotificationSettings
+            ) throws Throwable {
         Class<?> clsStatusBarIcon = XposedHelpers.findClass(
                 "com.android.internal.statusbar.StatusBarIcon", lpparam.classLoader);
         XposedBridge.hookAllConstructors(clsStatusBarIcon, new XC_MethodHook() {
