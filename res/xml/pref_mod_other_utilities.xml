@@ -36,5 +36,11 @@
         android:enabled="@bool/is_jb_mr1_or_later"
         android:key="config_camera_sound_forced"
         android:title="@string/title_config_camera_sound_forced" />
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:dependency="master_mod_other_utilities_enable"
+        android:enabled="@bool/is_kitkat_or_later"
+        android:key="prevent_emergency_button_miss_tap"
+        android:title="@string/title_prevent_emergency_button_miss_tap" />
 
 </PreferenceScreen>

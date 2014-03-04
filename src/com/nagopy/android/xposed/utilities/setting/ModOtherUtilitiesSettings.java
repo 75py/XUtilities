@@ -25,12 +25,18 @@ class ModOtherUtilitiesSettings {
     /** メニューキーを表示するか */
     public Boolean showMenuKey;
 
+    /** Volume rocker wake */
     public Boolean volumeRockerWake;
 
+    /** IME切り替え通知 */
     public Boolean showOngoingImeSwitcher;
 
+    /** アクションバーのテキスト */
     public Boolean configAllowActionMenuItemTextWithIcon;
 
+    /** カメラ音 */
     public Boolean configCameraSoundForced;
 
+    /** 緊急通報ボタンの誤タップ防止 */
+    public Boolean preventEmergencyButtonMissTap;
 }

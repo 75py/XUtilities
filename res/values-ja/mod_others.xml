@@ -6,6 +6,7 @@
     <string name="title_show_ongoing_ime_switcher">IME切り替えアイコンを表示</string>
     <string name="title_volume_rocker_wake">音量キーでスリープ復帰</string>
     <string name="title_config_camera_sound_forced">Camera sound forced</string>
+    <string name="title_prevent_emergency_button_miss_tap">緊急通報ボタン誤タップ防止</string>
     <string name="title_config_allow_action_menu_item_text_with_icon">アクションメニュー文字表示</string>
 
     <!-- header -->

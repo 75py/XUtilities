@@ -6,6 +6,7 @@
     <string name="title_show_ongoing_ime_switcher">Show ongoing IME switchers</string>
     <string name="title_volume_rocker_wake">Volume rocker wake</string>
     <string name="title_config_camera_sound_forced">Camera sound forced</string>
+    <string name="title_prevent_emergency_button_miss_tap">Prevent emergency button miss tap</string>
     <string name="title_config_allow_action_menu_item_text_with_icon">Allow action menu item text with icon</string>
 
     <!-- header -->

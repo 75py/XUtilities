@@ -24,4 +24,7 @@ public class XConst {
     /** システムUIのパッケージ名 */
     public static final String PKG_SYSTEM_UI = "com.android.systemui";
 
+    /** キーガードのパッケージ名 */
+    public static final String PKG_KEYGUARD = "com.android.keyguard";
+
 }

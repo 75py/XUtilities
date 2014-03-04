@@ -20,15 +20,17 @@ import android.app.KeyguardManager;
 import android.content.Context;
 import android.content.res.XResources;
 import android.os.Build;
+import android.util.TypedValue;
 import android.view.KeyEvent;
+import android.widget.Button;
 
 import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.xposed.util.XConst;
 import com.nagopy.android.xposed.util.XUtil;
 import com.nagopy.android.xposed.utilities.XposedModules.HandleLoadPackage;
 import com.nagopy.android.xposed.utilities.XposedModules.InitZygote;
-import com.nagopy.android.xposed.utilities.XposedModules.XposedModule;
 import com.nagopy.android.xposed.utilities.XposedModules.XMinSdkVersion;
+import com.nagopy.android.xposed.utilities.XposedModules.XposedModule;
 import com.nagopy.android.xposed.utilities.setting.ModOtherUtilitiesSettingsGen;
 
 import de.robv.android.xposed.IXposedHookZygoteInit.StartupParam;
@@ -157,5 +159,57 @@ public class ModOtherUtilities {
                 }
             });
         }
+    }
+
+    @HandleLoadPackage(targetPackage = XConst.PKG_KEYGUARD, summary = "緊急通報ボタン")
+    @XMinSdkVersion(Build.VERSION_CODES.KITKAT)
+    public static void preventEmergencyButtonMissTap(
+            final String modulePath,
+            final LoadPackageParam lpparam,
+            final ModOtherUtilitiesSettingsGen settings) throws Throwable {
+        if (!settings.preventEmergencyButtonMissTap) {
+            return;
+        }
+        Class<?> clsEmergencyButton = XposedHelpers.findClass(
+                "com.android.keyguard.EmergencyButton", lpparam.classLoader);
+        XposedHelpers.findAndHookMethod(clsEmergencyButton, "onFinishInflate",
+                new XC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        Button button = (Button) param.thisObject;
+                        XposedHelpers.setAdditionalInstanceField(button, "size",
+                                button.getTextSize());
+                    }
+                });
+        XposedHelpers.findAndHookMethod(clsEmergencyButton, "takeEmergencyCallAction",
+                new XC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        Button button = (Button) param.thisObject;
+                        Object flag = XposedHelpers.getAdditionalInstanceField(button, "flag");
+                        if (flag == null) {
+                            XposedHelpers.setAdditionalInstanceField(button, "flag", true);
+                            button.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                                    button.getTextSize() * 1.25f);
+                            param.setResult(null);
+                        } else {
+                            XposedHelpers.removeAdditionalInstanceField(button, "flag");
+                            button.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                                    (Float) XposedHelpers
+                                            .getAdditionalInstanceField(button, "size"));
+                        }
+                    }
+                });
+        XposedHelpers.findAndHookMethod(clsEmergencyButton, "onAttachedToWindow",
+                new XC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        XposedHelpers.removeAdditionalInstanceField(param.thisObject, "flag");
+                        Button button = (Button) param.thisObject;
+                        button.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                                (Float) XposedHelpers
+                                        .getAdditionalInstanceField(button, "size"));
+                    }
+                });
     }
 }
