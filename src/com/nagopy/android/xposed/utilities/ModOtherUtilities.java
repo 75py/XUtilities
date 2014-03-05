@@ -24,7 +24,6 @@ import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.widget.Button;
 
-import com.nagopy.android.common.util.VersionUtil;
 import com.nagopy.android.xposed.util.XConst;
 import com.nagopy.android.xposed.util.XUtil;
 import com.nagopy.android.xposed.utilities.XposedModules.HandleLoadPackage;
@@ -59,39 +58,11 @@ public class ModOtherUtilities {
     }
 
     @InitZygote(summary = "カメラ シャッター音")
+    @XMinSdkVersion(Build.VERSION_CODES.JELLY_BEAN_MR1)
     public static void setConfigCameraSoundForced(StartupParam startupParam,
             ModOtherUtilitiesSettingsGen mOtherUtilitiesSettings) throws Throwable {
-        if (VersionUtil.isJBmr1OrLater()) {
-            XResources.setSystemWideReplacement("android", "bool", "config_camera_sound_forced",
-                    mOtherUtilitiesSettings.configCameraSoundForced);
-        }
-
-        // 音量ボタンでスリープ復帰
-        if (VersionUtil.isJBmr1OrLater() && mOtherUtilitiesSettings.volumeRockerWake) {
-            // 4.2以上、設定が有効の場合は処理を開始
-
-            // PhoneWindowManagerのクラスを取得
-            Class<?> phoneWindowManager = XposedHelpers.findClass(
-                    "com.android.internal.policy.impl.PhoneWindowManager", null);
-            // isWakeKeyWhenScreenOffを書き換え
-            XposedHelpers.findAndHookMethod(phoneWindowManager, "isWakeKeyWhenScreenOff",
-                    int.class, new XC_MethodReplacement() {
-                        @Override
-                        protected Object replaceHookedMethod(MethodHookParam param)
-                                throws Throwable {
-                            int keyCode = (Integer) param.args[0];
-                            switch (keyCode) {
-                                case KeyEvent.KEYCODE_VOLUME_DOWN:
-                                case KeyEvent.KEYCODE_VOLUME_UP:
-                                    // 音量アップ・ダウンボタンの場合はtrueを返す
-                                    return true;
-                                default:
-                                    // それ以外のボタンの場合は、オリジナルのメソッドを実行
-                                    return XUtil.invokeOriginalMethod(param);
-                            }
-                        }
-                    });
-        }
+        XResources.setSystemWideReplacement("android", "bool", "config_camera_sound_forced",
+                mOtherUtilitiesSettings.configCameraSoundForced);
     }
 
     @InitZygote(summary = "音量ボタンでスリープ復帰")
@@ -128,37 +99,38 @@ public class ModOtherUtilities {
     @HandleLoadPackage(summary = "メニューキー表示", targetPackage = XConst.PKG_SYSTEM_UI)
     public static void setMenuVisibility(String modulePath, LoadPackageParam lpparam,
             ModOtherUtilitiesSettingsGen mOtherUtilitiesSettings) throws Throwable {
-        if (mOtherUtilitiesSettings.showMenuKey) {
-            Class<?> navigationBarViewClass = XposedHelpers.findClass(
-                    "com.android.systemui.statusbar.phone.NavigationBarView", lpparam.classLoader);
-            XposedHelpers.findAndHookMethod(navigationBarViewClass, "setMenuVisibility",
-                    boolean.class, boolean.class, new XC_MethodReplacement() {
-                        @Override
-                        protected Object replaceHookedMethod(MethodHookParam param)
-                                throws Throwable {
-                            Context mContext = (Context) XposedHelpers.getObjectField(
-                                    param.thisObject, "mContext");
-                            KeyguardManager keyguardManager = (KeyguardManager) mContext
-                                    .getSystemService(Context.KEYGUARD_SERVICE);
-                            if (keyguardManager.inKeyguardRestrictedInputMode()) {
-                                return XUtil.invokeOriginalMethod(param);
-                            }
-
-                            // キーガード表示中以外ではtrue（表示）にして実行する
-                            Object[] args = {
-                                    true, true
-                            };
-                            return XposedBridge.invokeOriginalMethod(param.method,
-                                    param.thisObject, args);
-                        }
-                    });
-            XposedBridge.hookAllConstructors(navigationBarViewClass, new XC_MethodHook() {
-                @Override
-                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                    XposedHelpers.setBooleanField(param.thisObject, "mShowMenu", true);
-                }
-            });
+        if (!mOtherUtilitiesSettings.showMenuKey) {
+            return;
         }
+        Class<?> navigationBarViewClass = XposedHelpers.findClass(
+                "com.android.systemui.statusbar.phone.NavigationBarView", lpparam.classLoader);
+        XposedHelpers.findAndHookMethod(navigationBarViewClass, "setMenuVisibility",
+                boolean.class, boolean.class, new XC_MethodReplacement() {
+                    @Override
+                    protected Object replaceHookedMethod(MethodHookParam param)
+                            throws Throwable {
+                        Context mContext = (Context) XposedHelpers.getObjectField(
+                                param.thisObject, "mContext");
+                        KeyguardManager keyguardManager = (KeyguardManager) mContext
+                                .getSystemService(Context.KEYGUARD_SERVICE);
+                        if (keyguardManager.inKeyguardRestrictedInputMode()) {
+                            return XUtil.invokeOriginalMethod(param);
+                        }
+
+                        // キーガード表示中以外ではtrue（表示）にして実行する
+                        Object[] args = {
+                                true, true
+                        };
+                        return XposedBridge.invokeOriginalMethod(param.method,
+                                param.thisObject, args);
+                    }
+                });
+        XposedBridge.hookAllConstructors(navigationBarViewClass, new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                XposedHelpers.setBooleanField(param.thisObject, "mShowMenu", true);
+            }
+        });
     }
 
     @HandleLoadPackage(targetPackage = XConst.PKG_KEYGUARD, summary = "緊急通報ボタン")
