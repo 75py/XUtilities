@@ -182,6 +182,10 @@ public class ModNotification {
             final LoadPackageParam lpparam,
             final ModNotificationSettingsGen mNotificationSettings
             ) throws Throwable {
+        if (!mNotificationSettings.reverseNotificationExpanded) {
+            return;
+        }
+
         Class<?> clsNotificationData = XposedHelpers.findClass(
                 "com.android.systemui.statusbar.NotificationData", lpparam.classLoader);
         XposedHelpers.findAndHookMethod(clsNotificationData, "get", int.class,
