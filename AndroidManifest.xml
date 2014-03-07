@@ -1,8 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.nagopy.android.xposed.utilities"
-    android:versionCode="16"
-    android:versionName="1.5.4 beta" >
+    android:versionCode="17"
+    android:versionName="1.5.5 beta" >
 
     <uses-sdk
         android:minSdkVersion="16"

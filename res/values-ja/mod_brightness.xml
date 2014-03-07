@@ -6,8 +6,8 @@
     <string name="title_min_brightness">最低輝度</string>
     <string name="title_config_auto_brightness_levels">自動調整（センサー値）</string>
     <string name="title_config_auto_brightness_lcd_backlight_values">自動調整（輝度）</string>
-
+    <string name="title_brightness_debugger">ステータスバーにデバッグ表示</string>
     <!-- header -->
-    <string name="header_brightness">画面輝度の設定です。\n設定変更は端末の再起動後に反映されます。</string>
+    <string name="header_brightness">画面輝度の設定です。\n設定変更は端末の再起動後に反映されます。\n自動モードの値を調整したい方は、デバッグ表示を有効にしてください。起動一分後から、ステータスバーにセンサー値・輝度を表示します。</string>
 
 </resources>
