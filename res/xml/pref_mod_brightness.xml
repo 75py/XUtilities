@@ -29,6 +29,13 @@
         android:key="config_auto_brightness_lcd_backlight_values"
         android:title="@string/title_config_auto_brightness_lcd_backlight_values" />
 
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:dependency="master_mod_brightness_enable"
+        android:enabled="@bool/is_jb_mr1_or_later"
+        android:key="brightness_debugger"
+        android:title="@string/title_brightness_debugger" />
+
     <com.nagopy.android.common.pref.TextPreference text="@string/about_brightness" />
 
 </PreferenceScreen>

@@ -34,4 +34,6 @@ class ModBrightnessSettings {
     @XStringDefaultValue("20, 35, 45, 85, 120, 200, 255")
     public String configAutoBrightnessLcdBacklightValues;
 
+    /** デバッグ表示 */
+    public Boolean brightnessDebugger;
 }

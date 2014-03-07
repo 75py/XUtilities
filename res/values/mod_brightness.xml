@@ -6,8 +6,9 @@
     <string name="title_min_brightness">Min brightness</string>
     <string name="title_config_auto_brightness_levels">Auto brightness levels</string>
     <string name="title_config_auto_brightness_lcd_backlight_values">Auto brightness backlight values</string>
-
+    <string name="title_brightness_debugger">Debugger(Statusbar)</string>
+    
     <!-- header -->
-    <string name="header_brightness">Display brightness settings.\nThe changes will be applied after reboot.</string>
+    <string name="header_brightness">Display brightness settings.\nThe changes will be applied after reboot.\nIf you want to adjust the value of the automatic mode, please enable debug display. From one minutes after start-up, It will display the sensor value and the brightness in the status bar.</string>
 
 </resources>
